@@ -29,7 +29,7 @@ export class NoelApp {
             },
             config: {
                 autoRotate: true,
-                gestures: true,
+                gestures: false, // Bắt đầu bằng false để ưu tiên tương tác vật lý khi chưa có camera
                 snow: true
             }
         };
@@ -230,7 +230,7 @@ export class NoelApp {
         const toggle = document.getElementById('toggle-gestures');
         if (toggle) toggle.checked = false;
         this.updateGuideContent();
-        this.showMessage("⚠️ Không tìm thấy Camera. Chế độ cử chỉ đã tắt.");
+        // Không hiện thông báo ở đây để tránh làm phiền nếu máy ko có cam ngay từ đầu
     }
 
     predict() {
