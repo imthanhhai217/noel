@@ -451,6 +451,9 @@ export class NoelApp {
             else if (openDist > 0.45) gestureId = 1; // Scatter (🖐️ Tăng ngưỡng xòe để tránh nhầm với 1 ngón)
             else if (openDist < 0.25) gestureId = 0; // Tree (✊ Tăng ngưỡng nắm để dễ nhận hơn)
 
+            // Lưu gesture hiện tại để chặn xoay nếu đang Focus
+            this.state.hand.currentGesture = gestureId;
+
             if (gestureId !== -1 && gestureId === this.gestureStability.lastRaw) {
                 this.gestureStability.count++;
             } else {
@@ -820,8 +823,8 @@ export class NoelApp {
 
                 // Cộng dồn góc xoay (đảo dấu deltaX để swipe trái xoay trái)
                 // Hệ số 3.0 để tăng độ nhạy
-                // Chỉ xoay nếu delta nhỏ (tránh giật khi mất tracking)
-                if (Math.abs(deltaX) < 0.1 && Math.abs(deltaY) < 0.1) {
+                // Chỉ xoay nếu delta nhỏ (tránh giật) VÀ KHÔNG PHẢI đang giơ ngón tay (ID 2)
+                if (Math.abs(deltaX) < 0.1 && Math.abs(deltaY) < 0.1 && this.state.hand.currentGesture !== 2) {
                     this.mainGroup.rotation.y -= deltaX * 3.0;
                     this.mainGroup.rotation.x += deltaY * 2.0;
                 }
