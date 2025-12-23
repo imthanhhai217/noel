@@ -17,7 +17,16 @@ export class NoelApp {
             focusTarget: null,
             hand: { detected: false, x: 0, y: 0 },
             rotation: { x: 0, y: 0 },
-            music: { playing: false, frequency: 0 },
+            music: {
+                playing: false,
+                index: 0,
+                frequency: 0,
+                playlist: [
+                    'https://cdn.pixabay.com/audio/2021/11/24/audio_83cc283995.mp3', // Jingle Bells
+                    'https://cdn.pixabay.com/audio/2021/12/10/audio_5f2d0a0b12.mp3', // We Wish You
+                    'https://cdn.pixabay.com/audio/2023/11/02/audio_be0c00ce58.mp3'  // Silent Night
+                ]
+            },
             config: {
                 autoRotate: true,
                 gestures: true,
@@ -283,6 +292,27 @@ export class NoelApp {
             this.handleMusic(e.target.checked);
         };
 
+        document.getElementById('select-song').onchange = (e) => {
+            this.state.music.index = parseInt(e.target.value);
+            if (this.state.music.playing) {
+                this.setupAudio(); // Reload with new song
+            }
+        };
+
+        // Message Update
+        document.getElementById('update-message').onclick = () => {
+            const input = document.getElementById('message-input');
+            const title = document.getElementById('app-title');
+            if (input.value.trim()) {
+                title.style.opacity = '0';
+                setTimeout(() => {
+                    title.innerText = input.value.toUpperCase();
+                    title.style.opacity = '1';
+                }, 800);
+                this.showMessage("✨ Lời chúc đã được gửi đi!");
+            }
+        };
+
         const themeBtns = document.querySelectorAll('.theme-btn');
         themeBtns.forEach(btn => {
             btn.onclick = () => {
@@ -469,12 +499,13 @@ export class NoelApp {
     }
 
     async handleMusic(play) {
+        this.state.music.playing = play;
         if (!this.audioInitialized) {
             this.setupAudio();
         }
 
         if (play) {
-            if (this.sound && !this.sound.isPlaying) {
+            if (this.sound && this.sound.buffer) {
                 this.sound.play();
                 this.showMessage("🎶 Đang phát nhạc Giáng sinh...");
             }
@@ -487,24 +518,30 @@ export class NoelApp {
     }
 
     setupAudio() {
-        const listener = new THREE.AudioListener();
-        this.camera.add(listener);
+        if (!this.sound) {
+            const listener = new THREE.AudioListener();
+            this.camera.add(listener);
+            this.sound = new THREE.Audio(listener);
+            this.analyser = new THREE.AudioAnalyser(this.sound, 32);
+        }
 
-        this.sound = new THREE.Audio(listener);
+        if (this.sound.isPlaying) this.sound.stop();
+
         const audioLoader = new THREE.AudioLoader();
+        const songUrl = this.state.music.playlist[this.state.music.index];
 
-        // Link nhạc Noel không bản quyền chất lượng cao
-        audioLoader.load('https://cdn.pixabay.com/audio/2022/12/13/audio_73229b478d.mp3', (buffer) => {
+        audioLoader.load(songUrl, (buffer) => {
             this.sound.setBuffer(buffer);
             this.sound.setLoop(true);
             this.sound.setVolume(0.5);
-            if (document.getElementById('toggle-music').checked) {
+            if (this.state.music.playing) {
                 this.sound.play();
             }
+            this.audioInitialized = true;
+        }, undefined, (err) => {
+            console.error("Audio Load Error:", err);
+            this.showMessage("❌ Không thể tải nhạc, vui lòng thử lại!");
         });
-
-        this.analyser = new THREE.AudioAnalyser(this.sound, 32);
-        this.audioInitialized = true;
     }
 
     updateGuideContent() {
