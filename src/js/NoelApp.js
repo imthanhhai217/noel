@@ -182,7 +182,6 @@ export class NoelApp {
         }
 
         const star = new THREE.Mesh(geos.star, this.mats.star);
-        star.rotation.x = Math.PI / 2; // Xoay lại cho đứng thẳng vì ExtrudeGeometry mặc định nằm ngang
         star.position.y = CONFIG.tree.height / 2 + 1.2;
         this.mainGroup.add(star);
 
