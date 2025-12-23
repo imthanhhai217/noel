@@ -307,17 +307,48 @@ export class NoelApp {
                     this.state.mode = 'FOCUS';
                     const photos = this.particles.filter(p => p.type === 'PHOTO');
                     if (photos.length) this.state.focusTarget = photos[Math.floor(Math.random() * photos.length)].mesh;
+                    this.showMessage("👌 Đã chọn ảnh để xem cận cảnh");
                 }
             } else if (openDist < 0.25) {
-                this.state.mode = 'TREE';
-                this.state.focusTarget = null;
+                if (this.state.mode !== 'TREE') {
+                    this.state.mode = 'TREE';
+                    this.state.focusTarget = null;
+                }
             } else if (openDist > 0.4) {
-                this.state.mode = 'SCATTER';
-                this.state.focusTarget = null;
+                if (this.state.mode !== 'SCATTER') {
+                    this.state.mode = 'SCATTER';
+                    this.state.focusTarget = null;
+                }
+            }
+
+            // Đếm số ngón tay
+            const count = this.countFingers(lms);
+            if (count !== this.lastFingerCount) {
+                this.lastFingerCount = count;
+                if (count > 0) this.showMessage(`Bạn đang giơ ${count} ngón tay 🖐️`);
             }
         } else {
             this.state.hand.detected = false;
+            this.lastFingerCount = 0;
         }
+    }
+
+    countFingers(lms) {
+        let count = 0;
+        // Các ngón: Trỏ (8), Giữa (12), Áp út (16), Út (20)
+        // Kiểm tra xem khớp đầu ngón có cao hơn khớp MCP (gốc ngón) không
+        const tips = [8, 12, 16, 20];
+        const bases = [6, 10, 14, 18];
+
+        tips.forEach((tip, idx) => {
+            if (lms[tip].y < lms[bases[idx]].y) count++;
+        });
+
+        // Riêng ngón cái (4) kiểm tra theo chiều ngang so với gốc ngón (2)
+        // (Tùy thuộc vào tay trái hay phải nhưng đơn giản hóa là so sánh khoảng cách x)
+        if (Math.abs(lms[4].x - lms[2].x) > 0.1) count++;
+
+        return count;
     }
 
     bindEvents() {
