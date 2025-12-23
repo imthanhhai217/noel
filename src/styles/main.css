@@ -249,14 +249,11 @@ h1 {
 }
 
 .upload-icon {
-    width: 50px;
-    height: 50px;
+    width: 45px;
+    height: 45px;
     object-fit: contain;
     display: block;
     margin: 0 auto 10px;
-    mix-blend-mode: screen;
-    /* Loại bỏ nền đen của ảnh */
-    filter: brightness(1.1) contrast(1.1);
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
