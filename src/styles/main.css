@@ -8,12 +8,19 @@
     --font-heading: 'Cinzel', serif;
 }
 
+html,
 body {
     margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
+    position: fixed;
+    /* Khóa viewport mobile cực mạnh */
     background-color: var(--dark-bg);
     font-family: var(--font-main);
     color: #fff;
+    -webkit-tap-highlight-color: transparent;
 }
 
 #canvas-container {
@@ -152,8 +159,8 @@ h1 {
     border-left: 1px solid rgba(212, 175, 55, 0.15);
     z-index: 1600;
     padding: 60px 40px;
-    transform: translateX(100%);
-    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translate3d(100%, 0, 0);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 0.6s;
     display: flex;
     flex-direction: column;
     gap: 35px;
@@ -162,6 +169,8 @@ h1 {
     /* Thêm scroll nếu nội dung quá dài */
     scrollbar-width: none;
     /* Ẩn scrollbar Firefox */
+    visibility: hidden;
+    pointer-events: none;
 }
 
 #settings-panel::-webkit-scrollbar {
@@ -170,7 +179,10 @@ h1 {
 }
 
 #settings-panel.open {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
+    visibility: visible;
+    pointer-events: auto;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 0s;
 }
 
 .settings-header {
@@ -258,19 +270,15 @@ h1 {
 @media (max-width: 768px) {
     #settings-panel {
         width: 100%;
-        padding: 80px 20px 40px;
-        /* Tăng padding top để tránh notch */
-    }
-
-    #settings-panel.open {
-        transform: translateX(0);
+        padding: 80px 25px 40px;
+        border-left: none;
     }
 
     #settings-trigger {
         top: 20px;
         right: 20px;
-        width: 54px;
-        height: 54px;
+        width: 50px;
+        height: 50px;
     }
 }
 
