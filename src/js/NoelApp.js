@@ -321,11 +321,36 @@ export class NoelApp {
                 }
             }
 
-            // Đếm số ngón tay
+            // Điều khiển âm nhạc bằng số ngón tay
             const count = this.countFingers(lms);
             if (count !== this.lastFingerCount) {
                 this.lastFingerCount = count;
-                if (count > 0) this.showMessage(`Bạn đang giơ ${count} ngón tay 🖐️`);
+
+                if (count > 0 && count <= this.state.music.playlist.length) {
+                    const nextIndex = count - 1;
+                    if (this.state.music.index !== nextIndex || !this.state.music.playing) {
+                        this.state.music.index = nextIndex;
+                        this.handleMusic(true);
+                        this.setupAudio(); // Tải và phát bài mới
+
+                        // Cập nhật UI
+                        const toggle = document.getElementById('toggle-music');
+                        if (toggle) toggle.checked = true;
+                        const select = document.getElementById('select-song');
+                        if (select) select.value = nextIndex;
+
+                        this.showMessage(`🎵 Chuyển sang bài ${count}: ${this.state.music.playlist[nextIndex].split('/').pop().split('.')[0]}`);
+                    }
+                } else if (count > this.state.music.playlist.length) {
+                    if (this.state.music.playing) {
+                        this.handleMusic(false);
+                        const toggle = document.getElementById('toggle-music');
+                        if (toggle) toggle.checked = false;
+                        this.showMessage("🔇 Số ngón tay vượt quá danh sách bài hát - Tắt nhạc");
+                    }
+                } else if (count > 0) {
+                    this.showMessage(`🖐️ Bạn đang giơ ${count} ngón tay`);
+                }
             }
         } else {
             this.state.hand.detected = false;
