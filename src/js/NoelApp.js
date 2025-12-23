@@ -156,24 +156,52 @@ export class NoelApp {
             green: new THREE.MeshStandardMaterial({ color: CONFIG.colors.green, roughness: 0.8, emissive: 0x001100 }),
             red: new THREE.MeshPhysicalMaterial({ color: CONFIG.colors.red, metalness: 0.3, roughness: 0.2, clearcoat: 1 }),
             star: new THREE.MeshStandardMaterial({ color: 0xffdd88, emissive: CONFIG.colors.star, emissiveIntensity: 2, metalness: 1 }),
-            dust: new THREE.MeshBasicMaterial({ color: 0xffeebb, transparent: true, opacity: 0.6 })
+            dust: new THREE.MeshBasicMaterial({ color: 0xffeebb, transparent: true, opacity: 0.6 }),
+            // Material mới cho candy cane và lá thông
+            candyRed: new THREE.MeshStandardMaterial({ color: 0xff0000, metalness: 0.5, roughness: 0.3 }),
+            candyWhite: new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.5, roughness: 0.3 }),
+            pineLeaf: new THREE.MeshStandardMaterial({ color: 0x1a4d2e, roughness: 0.7, emissive: 0x0a2617 })
         };
 
         const geos = {
             sphere: new THREE.SphereGeometry(0.5, 24, 24),
             box: new THREE.BoxGeometry(0.55, 0.55, 0.55),
             oct: new THREE.OctahedronGeometry(1.2, 0),
-            star: this.createStarGeometry(0.8, 1.8, 5) // Ngôi sao 5 cánh vàng
+            star: this.createStarGeometry(0.8, 1.8, 5),
+            // Geometry mới
+            candyCane: this.createCandyCaneGeometry(),
+            pineLeaf: this.createPineLeafGeometry()
         };
 
         for (let i = 0; i < CONFIG.tree.particleCount; i++) {
             const r = Math.random();
             let mesh, type;
 
-            if (r < 0.4) { mesh = new THREE.Mesh(geos.box, this.mats.green); type = 'LEAF'; }
-            else if (r < 0.7) { mesh = new THREE.Mesh(geos.box, this.mats.gold); type = 'GIFT'; }
-            else if (r < 0.95) { mesh = new THREE.Mesh(geos.sphere, this.mats.gold); type = 'BALL'; }
-            else { mesh = new THREE.Mesh(geos.sphere, this.mats.red); type = 'RED_BALL'; }
+            // Phân bố đa dạng hơn với các loại mới
+            if (r < 0.25) {
+                mesh = new THREE.Mesh(geos.box, this.mats.green);
+                type = 'LEAF';
+            }
+            else if (r < 0.4) {
+                mesh = new THREE.Mesh(geos.pineLeaf, this.mats.pineLeaf);
+                type = 'PINE_LEAF';
+            }
+            else if (r < 0.55) {
+                mesh = new THREE.Mesh(geos.box, this.mats.gold);
+                type = 'GIFT';
+            }
+            else if (r < 0.7) {
+                mesh = this.createCandyCaneGroup(geos.candyCane);
+                type = 'CANDY_CANE';
+            }
+            else if (r < 0.9) {
+                mesh = new THREE.Mesh(geos.sphere, this.mats.gold);
+                type = 'BALL';
+            }
+            else {
+                mesh = new THREE.Mesh(geos.sphere, this.mats.red);
+                type = 'RED_BALL';
+            }
 
             const s = 0.4 + Math.random() * 0.5;
             mesh.scale.set(s, s, s);
@@ -217,6 +245,57 @@ export class NoelApp {
         };
         const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
         geo.center(); // Đưa tâm về giữa để xoay cho chuẩn
+        return geo;
+    }
+
+    createCandyCaneGeometry() {
+        // T\u1ea1o h\u00ecnh g\u1eady k\u1eb9o candy cane (c\u00e1i g\u1eady c\u00f3 \u0111\u1ea7u c\u00f4ng)
+        const curve = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(0, -1, 0),
+            new THREE.Vector3(0, 0.5, 0),
+            new THREE.Vector3(0.5, 0.8, 0),
+            new THREE.Vector3(0.7, 0.7, 0)
+        ]);
+        const tubeGeo = new THREE.TubeGeometry(curve, 20, 0.1, 8, false);
+        return tubeGeo;
+    }
+
+    createCandyCaneGroup(candyGeo) {
+        // T\u1ea1o group v\u1edbi s\u1ecdc \u0111\u1ecf tr\u1eafng xen k\u1ebd
+        const group = new THREE.Group();
+
+        // Ph\u1ea7n ch\u00ednh (k\u1eb9o \u0111\u1ecf)
+        const candyRed = new THREE.Mesh(candyGeo, this.mats.candyRed);
+        group.add(candyRed);
+
+        // Th\u00eam v\u00e0i s\u1ecdc tr\u1eafng nh\u1ecf (d\u00f9ng box m\u1ecfng)
+        for (let i = 0; i < 3; i++) {
+            const stripe = new THREE.Mesh(
+                new THREE.BoxGeometry(0.22, 0.15, 0.22),
+                this.mats.candyWhite
+            );
+            stripe.position.y = -0.5 + i * 0.5;
+            stripe.rotation.z = Math.PI / 4;
+            group.add(stripe);
+        }
+
+        return group;
+    }
+
+    createPineLeafGeometry() {
+        // T\u1ea1o h\u00ecnh l\u00e1 th\u00f4ng (h\u00ecnh kim nh\u1ecdn d\u00e0i)
+        const shape = new THREE.Shape();
+        shape.moveTo(0, 0);
+        shape.lineTo(0.05, 0.5);
+        shape.lineTo(0, 1);
+        shape.lineTo(-0.05, 0.5);
+        shape.closePath();
+
+        const extrudeSettings = {
+            depth: 0.05,
+            bevelEnabled: false
+        };
+        const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
         return geo;
     }
 
