@@ -162,7 +162,8 @@ export class NoelApp {
         const geos = {
             sphere: new THREE.SphereGeometry(0.5, 24, 24),
             box: new THREE.BoxGeometry(0.55, 0.55, 0.55),
-            oct: new THREE.OctahedronGeometry(1.2, 0)
+            oct: new THREE.OctahedronGeometry(1.2, 0),
+            star: this.createStarGeometry(0.8, 1.8, 5) // Ngôi sao 5 cánh vàng
         };
 
         for (let i = 0; i < CONFIG.tree.particleCount; i++) {
@@ -180,7 +181,8 @@ export class NoelApp {
             this.particles.push(new Particle(mesh, type));
         }
 
-        const star = new THREE.Mesh(geos.oct, this.mats.star);
+        const star = new THREE.Mesh(geos.star, this.mats.star);
+        star.rotation.x = Math.PI / 2; // Xoay lại cho đứng thẳng vì ExtrudeGeometry mặc định nằm ngang
         star.position.y = CONFIG.tree.height / 2 + 1.2;
         this.mainGroup.add(star);
 
@@ -190,6 +192,30 @@ export class NoelApp {
             this.mainGroup.add(d);
             this.particles.push(new Particle(d, 'DUST', true));
         }
+    }
+
+    createStarGeometry(innerRadius, outerRadius, points) {
+        const shape = new THREE.Shape();
+        for (let i = 0; i < points * 2; i++) {
+            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            const angle = (i / (points * 2)) * Math.PI * 2;
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+            if (i === 0) shape.moveTo(x, y);
+            else shape.lineTo(x, y);
+        }
+        shape.closePath();
+
+        const extrudeSettings = {
+            depth: 0.4,
+            bevelEnabled: true,
+            bevelThickness: 0.1,
+            bevelSize: 0.1,
+            bevelSegments: 3
+        };
+        const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        geo.center(); // Đưa tâm về giữa để xoay cho chuẩn
+        return geo;
     }
 
     setupPostProcessing() {
