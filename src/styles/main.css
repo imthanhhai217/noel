@@ -244,10 +244,18 @@ h1 {
     background: rgba(212, 175, 55, 0.05);
 }
 
-.upload-zone i {
-    font-size: 2rem;
+.upload-icon {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
     display: block;
-    margin-bottom: 10px;
+    margin: 0 auto 15px;
+    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.upload-zone:hover .upload-icon {
+    transform: scale(1.1) rotate(-5deg);
 }
 
 .upload-zone span {
