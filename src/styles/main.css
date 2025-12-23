@@ -290,6 +290,41 @@ input:checked+.slider:before {
     background-color: var(--gold);
 }
 
+/* Theme Picker Styles */
+.theme-picker {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.theme-btn {
+    padding: 6px 12px;
+    font-size: 10px;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(212, 175, 55, 0.6);
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.theme-btn:hover {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.1);
+    color: var(--gold);
+}
+
+.theme-btn.active {
+    background: var(--gold);
+    color: var(--dark-bg);
+    border-color: var(--gold);
+    font-weight: 600;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
 /* Toast Notifications */
 #toast-container {
     position: fixed;

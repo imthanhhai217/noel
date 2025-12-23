@@ -11,11 +11,13 @@ export class NoelApp {
     constructor() {
         this.container = document.getElementById('canvas-container');
         this.clock = new THREE.Clock();
+        this.audioInitialized = false;
         this.state = {
             mode: 'TREE',
             focusTarget: null,
             hand: { detected: false, x: 0, y: 0 },
             rotation: { x: 0, y: 0 },
+            music: { playing: false, frequency: 0 },
             config: {
                 autoRotate: true,
                 gestures: true,
@@ -277,9 +279,18 @@ export class NoelApp {
             this.state.config.snow = e.target.checked;
         };
 
-        document.getElementById('select-theme').onchange = (e) => {
-            this.updateTheme(e.target.value);
+        document.getElementById('toggle-music').onchange = (e) => {
+            this.handleMusic(e.target.checked);
         };
+
+        const themeBtns = document.querySelectorAll('.theme-btn');
+        themeBtns.forEach(btn => {
+            btn.onclick = () => {
+                themeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.updateTheme(btn.dataset.theme);
+            };
+        });
 
         // Click/Tap Interaction
         const onSelect = (event) => {
@@ -312,11 +323,32 @@ export class NoelApp {
 
         this.renderer.domElement.addEventListener('mousedown', (e) => this._clickStartTime = Date.now());
         this.renderer.domElement.addEventListener('mouseup', (e) => {
-            if (Date.now() - this._clickStartTime < 200) onSelect(e);
+            const now = Date.now();
+            if (now - this._clickStartTime < 200) {
+                // Double click detection
+                if (now - (this._lastClickTime || 0) < 300) {
+                    this.state.mode = (this.state.mode === 'SCATTER') ? 'TREE' : 'SCATTER';
+                    this.state.focusTarget = null;
+                } else {
+                    onSelect(e);
+                }
+                this._lastClickTime = now;
+            }
         });
+
         this.renderer.domElement.addEventListener('touchstart', (e) => this._clickStartTime = Date.now());
         this.renderer.domElement.addEventListener('touchend', (e) => {
-            if (Date.now() - this._clickStartTime < 200) onSelect(e);
+            const now = Date.now();
+            if (now - this._clickStartTime < 200) {
+                // Double tap detection
+                if (now - (this._lastTapTime || 0) < 300) {
+                    this.state.mode = (this.state.mode === 'SCATTER') ? 'TREE' : 'SCATTER';
+                    this.state.focusTarget = null;
+                } else {
+                    onSelect(e);
+                }
+                this._lastTapTime = now;
+            }
         });
     }
 
@@ -391,6 +423,18 @@ export class NoelApp {
 
         this.particles.forEach(p => p.update(dt, this.state, this.mainGroup, this.camera));
 
+        // Music Visualizer Logic
+        if (this.analyser) {
+            this.state.music.frequency = this.analyser.getAverageFrequency();
+            const freqNorm = this.state.music.frequency / 128; // 0 to 1
+
+            // Pulse Star & Bloom based on music
+            if (this.mats && this.mats.star) {
+                this.mats.star.emissiveIntensity = 2 + freqNorm * 6;
+            }
+            this.renderer.toneMappingExposure = 2.2 + freqNorm * 0.8;
+        }
+
         this.composer.render();
     }
 
@@ -424,6 +468,45 @@ export class NoelApp {
         this.showMessage(`Đã chuyển sang chủ đề ${themeName.toUpperCase()} ✨`);
     }
 
+    async handleMusic(play) {
+        if (!this.audioInitialized) {
+            this.setupAudio();
+        }
+
+        if (play) {
+            if (this.sound && !this.sound.isPlaying) {
+                this.sound.play();
+                this.showMessage("🎶 Đang phát nhạc Giáng sinh...");
+            }
+        } else {
+            if (this.sound && this.sound.isPlaying) {
+                this.sound.pause();
+                this.showMessage("🔇 Đã tắt nhạc");
+            }
+        }
+    }
+
+    setupAudio() {
+        const listener = new THREE.AudioListener();
+        this.camera.add(listener);
+
+        this.sound = new THREE.Audio(listener);
+        const audioLoader = new THREE.AudioLoader();
+
+        // Link nhạc Noel không bản quyền chất lượng cao
+        audioLoader.load('https://cdn.pixabay.com/audio/2022/12/13/audio_73229b478d.mp3', (buffer) => {
+            this.sound.setBuffer(buffer);
+            this.sound.setLoop(true);
+            this.sound.setVolume(0.5);
+            if (document.getElementById('toggle-music').checked) {
+                this.sound.play();
+            }
+        });
+
+        this.analyser = new THREE.AudioAnalyser(this.sound, 32);
+        this.audioInitialized = true;
+    }
+
     updateGuideContent() {
         const guide = document.getElementById('gesture-guide-content');
         if (!guide) return;
@@ -447,7 +530,7 @@ export class NoelApp {
             } else {
                 guide.innerHTML = `
                     🖱️ <b>Click vào ảnh:</b> Xem cận cảnh<br>
-                    🌌 <b>Click vùng trống:</b> Tỏa hạt/Cây thông<br>
+                    🌌 <b>Double Click:</b> Tỏa hạt/Cây thông<br>
                     🖱️ <b>Giữ chuột trái:</b> Xoay không gian<br>
                     🎡 <b>Cuộn chuột:</b> Phóng to/Thu nhỏ
                 `;
