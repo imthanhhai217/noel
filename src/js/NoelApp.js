@@ -10,7 +10,12 @@ export class NoelApp {
             mode: 'TREE',
             focusTarget: null,
             hand: { detected: false, x: 0, y: 0 },
-            rotation: { x: 0, y: 0 }
+            rotation: { x: 0, y: 0 },
+            config: {
+                autoRotate: true,
+                gestures: true,
+                snow: true
+            }
         };
 
         this.particles = [];
@@ -187,6 +192,7 @@ export class NoelApp {
     }
 
     predict() {
+        if (!this.state.config.gestures) return;
         if (this.video && this.video.currentTime !== this.lastVideoTime) {
             this.lastVideoTime = this.video.currentTime;
             const result = this.handLandmarker.detectForVideo(this.video, performance.now());
@@ -243,6 +249,19 @@ export class NoelApp {
         window.addEventListener('keydown', (e) => {
             if (e.key.toLowerCase() === 'h') document.getElementById('ui-layer').classList.toggle('ui-hidden');
         });
+
+        // Config Toggles
+        document.getElementById('toggle-rotate').onchange = (e) => {
+            this.state.config.autoRotate = e.target.checked;
+        };
+        document.getElementById('toggle-gestures').onchange = (e) => {
+            this.state.config.gestures = e.target.checked;
+            if (e.target.checked) this.predict();
+            else this.state.hand.detected = false;
+        };
+        document.getElementById('toggle-snow').onchange = (e) => {
+            this.state.config.snow = e.target.checked;
+        };
 
         // Click/Tap Interaction
         const onSelect = (event) => {
@@ -322,7 +341,7 @@ export class NoelApp {
         const dt = this.clock.getDelta();
         const time = this.clock.elapsedTime;
 
-        let targetRY = (this.state.mode === 'TREE') ? time * 0.2 : 0;
+        let targetRY = (this.state.mode === 'TREE' && this.state.config.autoRotate) ? time * 0.2 : 0;
         let targetRX = 0;
 
         if (this.state.hand.detected && this.state.mode === 'SCATTER') {

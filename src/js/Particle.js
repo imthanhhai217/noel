@@ -26,7 +26,7 @@ export class Particle {
         this.type = type;
         this.isDust = isDust;
         this.baseScale = mesh.scale.x;
-        
+
         this.posTree = new THREE.Vector3();
         this.posScatter = new THREE.Vector3();
         this.spinSpeed = new THREE.Vector3(
@@ -95,7 +95,7 @@ export class Particle {
         // Scale
         let s = this.baseScale;
         if (this.isDust) {
-            s = (state.mode === 'TREE') ? 0 : this.baseScale * (0.8 + 0.4 * Math.sin(Date.now() * 0.004 + this.mesh.id));
+            s = (state.mode === 'TREE' || !state.config.snow) ? 0 : this.baseScale * (0.8 + 0.4 * Math.sin(Date.now() * 0.004 + this.mesh.id));
         } else if (state.mode === 'SCATTER' && this.type === 'PHOTO') {
             s *= 2.5;
         } else if (state.mode === 'FOCUS') {
