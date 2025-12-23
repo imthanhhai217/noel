@@ -34,6 +34,13 @@ export class NoelApp {
             }
         };
 
+        this.gestureStability = {
+            lastRaw: -1,
+            count: 0,
+            confirmed: -1
+        };
+        this.lastMessage = "";
+
         this.particles = [];
         this.photoGroup = new THREE.Group();
         this.lastVideoTime = -1;
@@ -300,61 +307,74 @@ export class NoelApp {
 
             const wrist = lms[0], thumb = lms[4], index = lms[8];
             const pinch = Math.hypot(thumb.x - index.x, thumb.y - index.y);
-            const count = this.countFingers(lms);
+            const rawCount = this.countFingers(lms);
             const openDist = [8, 12, 16, 20].reduce((a, i) => a + Math.hypot(lms[i].x - wrist.x, lms[i].y - wrist.y), 0) / 4;
 
-            // LOGIC PHÂN TÁCH ĐỂ TRÁNH NHẦM LẪN (v1.2.1.11)
-            if (count === 5 || openDist > 0.45) {
-                // Xòe tay hoàn toàn -> SCATTER
-                if (this.state.mode !== 'SCATTER') {
-                    this.state.mode = 'SCATTER';
-                    this.state.focusTarget = null;
-                    this.showMessage("�️ Chế độ Ký ức (Scatter)");
-                }
-            } else if (count === 0 || openDist < 0.2) {
-                // Nắm tay -> TREE
-                if (this.state.mode !== 'TREE') {
-                    this.state.mode = 'TREE';
-                    this.state.focusTarget = null;
-                    this.showMessage("✊ Chế độ Cây thông (Tree)");
-                }
-            } else if (pinch < 0.06) {
-                // 👌 Nhón tay -> FOCUS
-                if (this.state.mode !== 'FOCUS') {
-                    this.state.mode = 'FOCUS';
-                    const photos = this.particles.filter(p => p.type === 'PHOTO');
-                    if (photos.length) this.state.focusTarget = photos[Math.floor(Math.random() * photos.length)].mesh;
-                    this.showMessage("👌 Cận cảnh kỷ niệm");
-                }
+            // XÁC ĐỊNH GESTURE THÔ (v1.2.1.12)
+            let currentRaw = rawCount;
+            if (pinch < 0.06) currentRaw = 99; // 99 là mã cho Pinch (👌)
+
+            // KIỂM TRA ĐỘ ỔN ĐỊNH (Stability Check)
+            if (currentRaw === this.gestureStability.lastRaw) {
+                this.gestureStability.count++;
             } else {
-                // Logic điều khiển nhạc (1, 2, 3 ngón)
-                if (count !== this.lastFingerCount) {
-                    this.lastFingerCount = count;
-                    if (count >= 1 && count <= 3) {
-                        const nextIndex = count - 1;
-                        if (this.state.music.index !== nextIndex || !this.state.music.playing) {
-                            this.state.music.index = nextIndex;
-                            this.handleMusic(true);
-                            this.setupAudio();
-                            const select = document.getElementById('select-song');
-                            if (select) select.value = nextIndex;
-                            const toggle = document.getElementById('toggle-music');
-                            if (toggle) toggle.checked = true;
-                            this.showMessage(`🎵 Bài ${count}: ${this.state.music.playlist[nextIndex].split('/').pop().split('.')[0]}`);
-                        }
-                    } else if (count === 4) {
-                        if (this.state.music.playing) {
-                            this.handleMusic(false);
-                            const toggle = document.getElementById('toggle-music');
-                            if (toggle) toggle.checked = false;
-                            this.showMessage("🔇 Tắt nhạc (Gesture)");
-                        }
-                    }
-                }
+                this.gestureStability.lastRaw = currentRaw;
+                this.gestureStability.count = 0;
+            }
+
+            // CHỈ THỰC HIỆN KHI GIỮ YÊN TRONG 15 FRAMES (~0.5s)
+            if (this.gestureStability.count === 15) {
+                this.executeGesture(currentRaw, openDist);
             }
         } else {
             this.state.hand.detected = false;
-            this.lastFingerCount = 0;
+            this.gestureStability.lastRaw = -1;
+            this.gestureStability.count = 0;
+        }
+    }
+
+    executeGesture(gesture, openDist) {
+        if (gesture === 99) { // 👌 PINCH
+            if (this.state.mode !== 'FOCUS') {
+                this.state.mode = 'FOCUS';
+                const photos = this.particles.filter(p => p.type === 'PHOTO');
+                if (photos.length) this.state.focusTarget = photos[Math.floor(Math.random() * photos.length)].mesh;
+                this.showMessage("👌 Cận cảnh kỷ niệm");
+            }
+            return;
+        }
+
+        if (gesture === 5 || openDist > 0.45) { // 🖐️ OPEN PALM
+            if (this.state.mode !== 'SCATTER') {
+                this.state.mode = 'SCATTER';
+                this.state.focusTarget = null;
+                this.showMessage("🖐️ Chế độ Ký ức");
+            }
+        } else if (gesture === 0 || openDist < 0.2) { // ✊ FIST
+            if (this.state.mode !== 'TREE') {
+                this.state.mode = 'TREE';
+                this.state.focusTarget = null;
+                this.showMessage("✊ Chế độ Cây thông");
+            }
+        } else if (gesture >= 1 && gesture <= 3) {
+            // ĐIỀU KHIỂN NHẠC (1, 2, 3)
+            const nextIndex = gesture - 1;
+            if (this.state.music.index !== nextIndex || !this.state.music.playing) {
+                this.state.music.index = nextIndex;
+                this.handleMusic(true);
+                this.setupAudio();
+                const select = document.getElementById('select-song');
+                if (select) select.value = nextIndex;
+                this.showMessage(`🎵 Bài hát ${gesture}`);
+            }
+        } else if (gesture === 4) {
+            // TẮT NHẠC (4)
+            if (this.state.music.playing) {
+                this.handleMusic(false);
+                const toggle = document.getElementById('toggle-music');
+                if (toggle) toggle.checked = false;
+                this.showMessage("🔇 Đã dừng nhạc");
+            }
         }
     }
 
@@ -699,19 +719,24 @@ export class NoelApp {
     }
 
     showMessage(text) {
+        if (text === this.lastMessage) return; // Chặn lặp
+        this.lastMessage = text;
+
         const container = document.getElementById('toast-container');
         if (!container) return;
 
         const toast = document.createElement('div');
-        toast.className = 'toast';
+        toast.className = 'toast show';
         toast.innerText = text;
-
         container.appendChild(toast);
 
-        // Tự xóa sau khi animation kết thúc (4s)
         setTimeout(() => {
-            toast.remove();
-        }, 4000);
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.remove();
+                if (this.lastMessage === text) this.lastMessage = "";
+            }, 500);
+        }, 3000);
     }
 
     updateTheme(themeName) {
@@ -780,10 +805,11 @@ export class NoelApp {
 
         if (this.state.config.gestures) {
             guide.innerHTML = `
-                🖐️ <b>Xòe tay:</b> Xem tất cả ảnh<br>
-                ✊ <b>Nắm tay:</b> Thu gọn cây thông<br>
-                👌 <b>Nhón tay:</b> Xem cận cảnh 1 ảnh<br>
-                ↔️ <b>Di chuyển:</b> Xoay không gian 3D
+                🖐️ <b>Xòe tay (Giữ yên):</b> Chế độ Ký ức<br>
+                ✊ <b>Nắm tay (Giữ yên):</b> Chế độ Cây thông<br>
+                👌 <b>Nhón tay:</b> Xem cận cảnh ảnh<br>
+                ☝️ <b>1, 2, 3 ngón:</b> Chọn bài nhạc<br>
+                🖖 <b>4 ngón:</b> Tắt âm nhạc
             `;
         } else {
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
