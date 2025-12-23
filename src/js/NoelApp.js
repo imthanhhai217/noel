@@ -429,30 +429,84 @@ export class NoelApp {
     handleUpload(e) {
         const files = Array.from(e.target.files);
         if (files.length > 0) {
-            this.showMessage(`Đang treo ${files.length} kỷ niệm lên cây... 📸`);
+            this.showMessage(`Đang treo ${files.length} kỷ niệm lên cây... 🧦`);
         }
         const loader = new THREE.TextureLoader();
         files.forEach(file => {
             const reader = new FileReader();
             reader.onload = (ev) => {
-                loader.load(ev.target.result, (t) => {
+                const dataUrl = ev.target.result;
+                loader.load(dataUrl, (t) => {
                     t.colorSpace = THREE.SRGBColorSpace;
-                    this.addPhotoToScene(t);
+                    this.addPhotoToScene(t, dataUrl);
                 });
             };
             reader.readAsDataURL(file);
         });
     }
 
-    addPhotoToScene(texture) {
+    addPhotoToScene(texture, dataUrl) {
+        const id = 'photo_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
         const group = new THREE.Group();
-        const frame = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.4, 0.05), new THREE.MeshStandardMaterial({ color: CONFIG.colors.gold, metalness: 1 }));
-        const photo = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.2), new THREE.MeshBasicMaterial({ map: texture }));
+        group.userData.id = id;
+
+        const frame = new THREE.Mesh(
+            new THREE.BoxGeometry(1.4, 1.4, 0.05),
+            new THREE.MeshStandardMaterial({ color: this.themes[this.state.mode === 'SCATTER' ? 'starry' : 'classic'].gold, metalness: 1 })
+        );
+        const photo = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.2, 1.2),
+            new THREE.MeshBasicMaterial({ map: texture })
+        );
         photo.position.z = 0.04;
         group.add(frame, photo);
         group.scale.setScalar(0.8);
+
         this.photoGroup.add(group);
-        this.particles.push(new Particle(group, 'PHOTO'));
+        const particle = new Particle(group, 'PHOTO');
+        particle.id = id;
+        particle.dataUrl = dataUrl;
+        this.particles.push(particle);
+
+        this.renderImageList();
+    }
+
+    renderImageList() {
+        const container = document.getElementById('image-list');
+        if (!container) return;
+
+        const photos = this.particles.filter(p => p.type === 'PHOTO');
+        if (photos.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        container.innerHTML = photos.map(p => `
+            <div class="preview-item">
+                <img src="${p.dataUrl}" alt="Kỷ niệm">
+                <button class="remove-img" onclick="window.app.removePhoto('${p.id}')">&times;</button>
+            </div>
+        `).join('');
+    }
+
+    removePhoto(id) {
+        const index = this.particles.findIndex(p => p.id === id);
+        if (index !== -1) {
+            const p = this.particles[index];
+            this.photoGroup.remove(p.mesh);
+            // Giải phóng bộ nhớ texture
+            if (p.mesh.children[1].material.map) {
+                p.mesh.children[1].material.map.dispose();
+            }
+            this.particles.splice(index, 1);
+            this.renderImageList();
+            this.showMessage("✨ Đã gỡ bỏ 1 kỷ niệm.");
+
+            if (this.state.focusTarget === p.mesh) {
+                this.state.focusTarget = null;
+                this.state.mode = 'TREE';
+            }
+        }
     }
 
     hideLoader() {
