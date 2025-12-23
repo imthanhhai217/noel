@@ -364,9 +364,31 @@ export class NoelApp {
         const panel = document.getElementById('settings-panel');
         const trigger = document.getElementById('settings-trigger');
 
-        if (trigger) trigger.onclick = () => panel.classList.toggle('open');
+        if (trigger) {
+            trigger.onclick = (e) => {
+                e.stopPropagation();
+                panel.classList.toggle('open');
+            };
+        }
+
         const closeBtn = document.querySelector('.close-settings');
         if (closeBtn) closeBtn.onclick = () => panel.classList.remove('open');
+
+        // Đóng khi nhấn ra ngoài
+        document.addEventListener('mousedown', (e) => {
+            if (panel.classList.contains('open')) {
+                if (!panel.contains(e.target) && !trigger.contains(e.target)) {
+                    panel.classList.remove('open');
+                }
+            }
+        });
+        document.addEventListener('touchstart', (e) => {
+            if (panel.classList.contains('open')) {
+                if (!panel.contains(e.target) && !trigger.contains(e.target)) {
+                    panel.classList.remove('open');
+                }
+            }
+        }, { passive: true });
 
         // Lời nhắn (Gửi lời chúc)
         const updateBtn = document.getElementById('update-message');
