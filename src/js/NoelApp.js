@@ -418,17 +418,32 @@ export class NoelApp {
             }
         }, { passive: true });
 
-        // Lời nhắn (Gửi lời chúc)
+        // Theme buttons - XỬ LÝ TRƯỚC
+        const themeBtns = document.querySelectorAll('.theme-picker .theme-btn');
+        themeBtns.forEach(btn => {
+            btn.onclick = () => {
+                themeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.updateTheme(btn.dataset.theme);
+            };
+        });
+
+        // Lời nhắn (Gửi lời chúc) - XỬ LÝ SAU để không bị ghi đè
         const updateBtn = document.getElementById('update-message');
         const messageInput = document.getElementById('message-input');
         const appTitle = document.getElementById('app-title');
 
         if (updateBtn && messageInput && appTitle) {
-            updateBtn.onclick = () => {
+            console.log('Binding update message button');
+            updateBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Update button clicked!');
                 const val = messageInput.value.trim();
                 if (val) {
+                    console.log('Updating title to:', val);
                     appTitle.innerText = val.toUpperCase();
-                    appTitle.style.color = '#ffd966'; // Ép màu vàng kim (var --gold)
+                    appTitle.style.color = '#ffd966';
                     appTitle.style.opacity = '1';
                     messageInput.value = '';
                     this.showMessage("✨ Lời chúc đã được gửi đi!");
@@ -437,6 +452,8 @@ export class NoelApp {
                     this.showMessage("⚠️ Hãy nhập lời chúc trước nhé!");
                 }
             };
+        } else {
+            console.error('Missing elements:', { updateBtn, messageInput, appTitle });
         }
 
         const fileInput = document.getElementById('file-input');
@@ -487,16 +504,7 @@ export class NoelApp {
             };
         }
 
-        // ... (đã di chuyển lên trên)
-
-        const themeBtns = document.querySelectorAll('.theme-picker .theme-btn');
-        themeBtns.forEach(btn => {
-            btn.onclick = () => {
-                themeBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                this.updateTheme(btn.dataset.theme);
-            };
-        });
+        // Theme buttons đã được di chuyển lên trên (sau dòng 419)
 
         // Click/Tap Interaction
         const onSelect = (event) => {
