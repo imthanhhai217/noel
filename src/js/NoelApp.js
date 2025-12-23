@@ -24,6 +24,14 @@ export class NoelApp {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
 
+        this.mats = {}; // Store materials for theme updates
+        this.themes = {
+            classic: { gold: 0xffd966, green: 0x03180a, red: 0x990000, star: 0xffaa00, dust: 0xffeebb },
+            frozen: { gold: 0xe0ffff, green: 0x1a4d66, red: 0x00ffff, star: 0xccffff, dust: 0xddffff },
+            pinky: { gold: 0xffe4e1, green: 0x6b4247, red: 0xff69b4, star: 0xfff0f5, dust: 0xfff0f5 },
+            starry: { gold: 0x9b59b6, green: 0x1a1a2e, red: 0x3498db, star: 0xe74c3c, dust: 0x9bc5ff }
+        };
+
         this.init();
         const title = document.getElementById('app-title');
         if (title) title.innerText = "MERRY CHRISTMAS";
@@ -105,11 +113,12 @@ export class NoelApp {
     }
 
     createAssets() {
-        const mats = {
+        this.mats = {
             gold: new THREE.MeshStandardMaterial({ color: CONFIG.colors.gold, metalness: 1, roughness: 0.1, emissive: 0x443300 }),
             green: new THREE.MeshStandardMaterial({ color: CONFIG.colors.green, roughness: 0.8, emissive: 0x001100 }),
             red: new THREE.MeshPhysicalMaterial({ color: CONFIG.colors.red, metalness: 0.3, roughness: 0.2, clearcoat: 1 }),
-            star: new THREE.MeshStandardMaterial({ color: 0xffdd88, emissive: CONFIG.colors.star, emissiveIntensity: 2, metalness: 1 })
+            star: new THREE.MeshStandardMaterial({ color: 0xffdd88, emissive: CONFIG.colors.star, emissiveIntensity: 2, metalness: 1 }),
+            dust: new THREE.MeshBasicMaterial({ color: 0xffeebb, transparent: true, opacity: 0.6 })
         };
 
         const geos = {
@@ -122,10 +131,10 @@ export class NoelApp {
             const r = Math.random();
             let mesh, type;
 
-            if (r < 0.4) { mesh = new THREE.Mesh(geos.box, mats.green); type = 'LEAF'; }
-            else if (r < 0.7) { mesh = new THREE.Mesh(geos.box, mats.gold); type = 'GIFT'; }
-            else if (r < 0.95) { mesh = new THREE.Mesh(geos.sphere, mats.gold); type = 'BALL'; }
-            else { mesh = new THREE.Mesh(geos.sphere, mats.red); type = 'RED_BALL'; }
+            if (r < 0.4) { mesh = new THREE.Mesh(geos.box, this.mats.green); type = 'LEAF'; }
+            else if (r < 0.7) { mesh = new THREE.Mesh(geos.box, this.mats.gold); type = 'GIFT'; }
+            else if (r < 0.95) { mesh = new THREE.Mesh(geos.sphere, this.mats.gold); type = 'BALL'; }
+            else { mesh = new THREE.Mesh(geos.sphere, this.mats.red); type = 'RED_BALL'; }
 
             const s = 0.4 + Math.random() * 0.5;
             mesh.scale.set(s, s, s);
@@ -133,14 +142,13 @@ export class NoelApp {
             this.particles.push(new Particle(mesh, type));
         }
 
-        const star = new THREE.Mesh(geos.oct, mats.star);
+        const star = new THREE.Mesh(geos.oct, this.mats.star);
         star.position.y = CONFIG.tree.height / 2 + 1.2;
         this.mainGroup.add(star);
 
         const dustGeo = new THREE.TetrahedronGeometry(0.08, 0);
-        const dustMat = new THREE.MeshBasicMaterial({ color: 0xffeebb, transparent: true, opacity: 0.6 });
         for (let i = 0; i < CONFIG.tree.dustCount; i++) {
-            const d = new THREE.Mesh(dustGeo, dustMat);
+            const d = new THREE.Mesh(dustGeo, this.mats.dust);
             this.mainGroup.add(d);
             this.particles.push(new Particle(d, 'DUST', true));
         }
@@ -263,8 +271,15 @@ export class NoelApp {
             this.state.config.snow = e.target.checked;
         };
 
+        document.getElementById('select-theme').onchange = (e) => {
+            this.updateTheme(e.target.value);
+        };
+
         // Click/Tap Interaction
         const onSelect = (event) => {
+            // Chỉ cho phép tương tác chuột/chạm khi chế độ cử chỉ tay đang TẮT
+            if (this.state.config.gestures) return;
+
             // Calculate mouse position
             const x = event.touches ? event.touches[0].clientX : event.clientX;
             const y = event.touches ? event.touches[0].clientY : event.clientY;
@@ -352,15 +367,19 @@ export class NoelApp {
         this.state.rotation.y += (targetRY - this.state.rotation.y) * 2.5 * dt;
         this.state.rotation.x += (targetRX - this.state.rotation.x) * 2.5 * dt;
 
-        // Apply rotation only if hand detected to avoid conflict with OrbitControls
-        if (this.state.hand.detected) {
+        // Apply rotation logic based on the switch
+        if (this.state.config.gestures && this.state.hand.detected) {
             this.mainGroup.rotation.y = this.state.rotation.y;
             this.mainGroup.rotation.x = this.state.rotation.x;
-            this.controls.enabled = false; // Disable orbit if hands are active
+            this.controls.enabled = false;
         } else {
-            this.mainGroup.rotation.y = THREE.MathUtils.lerp(this.mainGroup.rotation.y, 0, dt);
-            this.mainGroup.rotation.x = THREE.MathUtils.lerp(this.mainGroup.rotation.x, 0, dt);
-            this.controls.enabled = true;
+            // If gestures are OFF or no hand detected, use OrbitControls
+            if (this.state.config.gestures) {
+                // If gestures are ON but no hand, just keep it smooth
+                this.mainGroup.rotation.y = THREE.MathUtils.lerp(this.mainGroup.rotation.y, 0, dt);
+                this.mainGroup.rotation.x = THREE.MathUtils.lerp(this.mainGroup.rotation.x, 0, dt);
+            }
+            this.controls.enabled = !this.state.hand.detected; // Hand still takes precedence if detected
             this.controls.update();
         }
 
@@ -383,5 +402,19 @@ export class NoelApp {
         setTimeout(() => {
             toast.remove();
         }, 4000);
+    }
+
+    updateTheme(themeName) {
+        const theme = this.themes[themeName];
+        if (!theme) return;
+
+        this.mats.gold.color.setHex(theme.gold);
+        this.mats.green.color.setHex(theme.green);
+        this.mats.red.color.setHex(theme.red);
+        this.mats.star.color.setHex(theme.star);
+        this.mats.star.emissive.setHex(theme.star);
+        this.mats.dust.color.setHex(theme.dust);
+
+        this.showMessage(`Đã chuyển sang chủ đề ${themeName.toUpperCase()} ✨`);
     }
 }
