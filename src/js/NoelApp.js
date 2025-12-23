@@ -184,11 +184,11 @@ export class NoelApp {
             }
             else if (r < 0.375) {
                 mesh = new THREE.Mesh(geos.pineLeaf, this.mats.pineLeaf);
-                // Lá thông nghiêng nhẹ theo trục X (15°) và random Y, Z
+                // Lá thông mọc từ cành và rủ xuống tự nhiên
                 mesh.rotation.set(
-                    Math.PI / 12, // 15° nghiêng nhẹ
-                    Math.random() * Math.PI * 2,
-                    Math.random() * Math.PI * 2
+                    Math.PI / 4 + Math.random() * Math.PI / 6, // 45-75° rủ xuống
+                    Math.random() * Math.PI * 2, // Hướng mọc ngẫu nhiên
+                    (Math.random() - 0.5) * Math.PI / 4 // Nghiêng nhẹ ±22.5°
                 );
                 type = 'PINE_LEAF';
             }
