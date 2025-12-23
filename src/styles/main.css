@@ -141,14 +141,15 @@ h1 {
 #settings-panel {
     position: fixed;
     top: 0;
-    right: -360px;
-    width: 320px;
+    right: 0;
+    width: 360px;
     height: 100vh;
     background: var(--glass);
     backdrop-filter: blur(25px);
     border-left: 1px solid rgba(212, 175, 55, 0.15);
     z-index: 1600;
     padding: 50px 30px;
+    transform: translateX(100%);
     transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
@@ -157,7 +158,7 @@ h1 {
 }
 
 #settings-panel.open {
-    transform: translateX(-360px);
+    transform: translateX(0);
 }
 
 .settings-header {
@@ -245,11 +246,19 @@ h1 {
 @media (max-width: 768px) {
     #settings-panel {
         width: 100%;
-        right: -100%;
+        padding: 80px 20px 40px;
+        /* Tăng padding top để tránh notch */
     }
 
     #settings-panel.open {
-        transform: translateX(-100%);
+        transform: translateX(0);
+    }
+
+    #settings-trigger {
+        top: 20px;
+        right: 20px;
+        width: 54px;
+        height: 54px;
     }
 }
 
