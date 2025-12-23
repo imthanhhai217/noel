@@ -182,9 +182,9 @@ export class NoelApp {
         }
 
         const star = new THREE.Mesh(geos.star, this.mats.star);
-        // Ngôi sao mặc định đứng thẳng rực rỡ đối diện camera (v1.2.1.26)
-        star.rotation.x = 0;
-        star.position.y = CONFIG.tree.height / 2 + 1.8;
+        // Ép ngôi sao đứng thẳng rực rỡ (v1.2.1.26)
+        star.rotation.x = -Math.PI / 2;
+        star.position.y = CONFIG.tree.height / 2 + 1.6;
         this.mainGroup.add(star);
 
         const dustGeo = new THREE.TetrahedronGeometry(0.08, 0);
@@ -489,7 +489,7 @@ export class NoelApp {
 
         // ... (đã di chuyển lên trên)
 
-        const themeBtns = document.querySelectorAll('.theme-btn');
+        const themeBtns = document.querySelectorAll('.theme-picker .theme-btn');
         themeBtns.forEach(btn => {
             btn.onclick = () => {
                 themeBtns.forEach(b => b.classList.remove('active'));
