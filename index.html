@@ -200,7 +200,7 @@
 
     <!-- Webcam hidden structure -->
     <div id="webcam-wrapper">
-        <video id="webcam" autoplay playsinline style="display:none;"></video>
+        <video id="webcam" autoplay playsinline muted style="display:none;"></video>
         <canvas id="webcam-preview"></canvas>
     </div>
 
@@ -257,7 +257,11 @@
             createDust();
             setupPostProcessing();
             setupEvents();
-            await initMediaPipe();
+            try {
+                await initMediaPipe();
+            } catch (e) {
+                console.warn("Webcam not available, fallback mode", e);
+            }
 
             const loader = document.getElementById('loader');
             loader.style.opacity = 0;
@@ -582,21 +586,53 @@
                 numHands: 1
             });
 
-            if (navigator.mediaDevices?.getUserMedia) {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-                video.addEventListener("loadeddata", predictWebcam);
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                // Thử nhiều cấu hình khác nhau để tương thích tối đa
+                const constraintsList = [
+                    { video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } },
+                    { video: { facingMode: "user" } },
+                    { video: true }
+                ];
+
+                let stream = null;
+                let lastError = null;
+
+                for (const constraints of constraintsList) {
+                    try {
+                        stream = await navigator.mediaDevices.getUserMedia(constraints);
+                        if (stream) break;
+                    } catch (err) {
+                        lastError = err;
+                        console.warn("Thử cấu hình camera thất bại:", constraints, err);
+                    }
+                }
+
+                if (stream) {
+                    video.srcObject = stream;
+                    video.onloadedmetadata = () => {
+                        video.play().catch(e => console.error("Không thể phát video:", e));
+                    };
+                    video.addEventListener("loadeddata", predictWebcam);
+                } else {
+                    throw lastError || new Error("Không tìm thấy thiết bị camera.");
+                }
+            } else {
+                throw new Error("Trình duyệt không hỗ trợ getUserMedia.");
             }
         }
 
         let lastVideoTime = -1;
         async function predictWebcam() {
-            if (video.currentTime !== lastVideoTime) {
-                lastVideoTime = video.currentTime;
-                if (handLandmarker) {
-                    const result = handLandmarker.detectForVideo(video, performance.now());
-                    processGestures(result);
+            try {
+                if (video.currentTime !== lastVideoTime) {
+                    lastVideoTime = video.currentTime;
+                    if (handLandmarker) {
+                        const result = handLandmarker.detectForVideo(video, performance.now());
+                        processGestures(result);
+                    }
                 }
+            } catch (err) {
+                console.warn("Lỗi trong quá trình xử lý khung hình camera:", err);
             }
             requestAnimationFrame(predictWebcam);
         }
