@@ -182,6 +182,14 @@ export class NoelApp {
     }
 
     async initVision() {
+        // Kiểm tra xem có thiết bị camera nào không trước khi xin quyền
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            if (!devices.some(d => d.kind === 'videoinput')) {
+                throw new Error("No camera device detected");
+            }
+        }
+
         const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
         this.handLandmarker = await HandLandmarker.createFromOptions(vision, {
             baseOptions: {
@@ -221,7 +229,7 @@ export class NoelApp {
             this.predict();
             this.showMessage("Đã kết nối Camera. Hãy thử cử chỉ tay! ✨");
         } else {
-            throw new Error("No camera stream available");
+            throw new Error("No camera stream available or permission denied");
         }
     }
 
@@ -338,15 +346,9 @@ export class NoelApp {
                 const val = input ? input.value.trim() : "";
 
                 if (val && title) {
-                    // Hiệu ứng mờ dần và đổi chữ
-                    title.style.transition = 'opacity 0.4s ease';
-                    title.style.opacity = '0';
-
-                    setTimeout(() => {
-                        title.innerText = val.toUpperCase();
-                        title.style.opacity = '0.9';
-                        if (input) input.value = '';
-                    }, 450);
+                    title.innerText = val.toUpperCase();
+                    title.style.opacity = '0.9';
+                    if (input) input.value = '';
 
                     this.showMessage("✨ Lời chúc đã được gửi đi!");
                     const panel = document.getElementById('settings-panel');
@@ -482,18 +484,21 @@ export class NoelApp {
 
     renderImageList() {
         const container = document.getElementById('image-list');
-        if (!container) return;
+        if (!container) {
+            console.warn("Container #image-list not found in DOM");
+            return;
+        }
 
         const photos = this.particles.filter(p => p.type === 'PHOTO');
         if (photos.length === 0) {
-            container.innerHTML = '';
+            container.innerHTML = '<div style="grid-column: 1/-1; padding: 10px; text-align: center; color: rgba(255,255,255,0.3); font-size: 10px;">Chưa có ảnh nào được treo.</div>';
             return;
         }
 
         container.innerHTML = photos.map(p => `
             <div class="preview-item">
-                <img src="${p.dataUrl}" alt="Kỷ niệm">
-                <button class="remove-img" onclick="window.app.removePhoto('${p.id}')">&times;</button>
+                <img src="${p.dataUrl}" alt="Kỷ niệm" onerror="this.src='https://via.placeholder.com/100?text=Error'">
+                <button class="remove-img" onclick="event.stopPropagation(); window.app.removePhoto('${p.id}')">&times;</button>
             </div>
         `).join('');
     }
