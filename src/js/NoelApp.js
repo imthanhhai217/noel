@@ -63,7 +63,8 @@ export class NoelApp {
         try {
             await this.initVision();
         } catch (e) {
-            console.warn("Vision System failed to start. Falling back to mouse/keyboard.", e);
+            console.warn("Vision System failed to start:", e);
+            this.disableGestureUI();
         }
 
         this.hideLoader();
@@ -210,9 +211,26 @@ export class NoelApp {
             video.srcObject = stream;
             video.onloadedmetadata = () => video.play();
             this.video = video;
+
+            // Sync UI and State
+            this.state.config.gestures = true;
+            const toggle = document.getElementById('toggle-gestures');
+            if (toggle) toggle.checked = true;
+            this.updateGuideContent();
+
             this.predict();
             this.showMessage("Đã kết nối Camera. Hãy thử cử chỉ tay! ✨");
+        } else {
+            throw new Error("No camera stream available");
         }
+    }
+
+    disableGestureUI() {
+        this.state.config.gestures = false;
+        const toggle = document.getElementById('toggle-gestures');
+        if (toggle) toggle.checked = false;
+        this.updateGuideContent();
+        this.showMessage("⚠️ Không tìm thấy Camera. Chế độ cử chỉ đã tắt.");
     }
 
     predict() {
@@ -278,11 +296,22 @@ export class NoelApp {
         document.getElementById('toggle-rotate').onchange = (e) => {
             this.state.config.autoRotate = e.target.checked;
         };
-        document.getElementById('toggle-gestures').onchange = (e) => {
+        document.getElementById('toggle-gestures').onchange = async (e) => {
             this.state.config.gestures = e.target.checked;
             this.updateGuideContent();
-            if (e.target.checked) this.predict();
-            else this.state.hand.detected = false;
+            if (e.target.checked) {
+                if (!this.video) {
+                    try {
+                        await this.initVision();
+                    } catch (err) {
+                        this.disableGestureUI();
+                    }
+                } else {
+                    this.predict();
+                }
+            } else {
+                this.state.hand.detected = false;
+            }
         };
         document.getElementById('toggle-snow').onchange = (e) => {
             this.state.config.snow = e.target.checked;
