@@ -8,6 +8,10 @@
     --font-heading: 'Cinzel', serif;
 }
 
+* {
+    box-sizing: border-box;
+}
+
 html,
 body {
     margin: 0;
@@ -152,14 +156,16 @@ h1 {
     position: fixed;
     top: 0;
     right: 0;
-    width: 380px;
-    max-width: 100%;
+    width: 320px;
+    /* Thu nhỏ chiều rộng mặc định một chút */
+    max-width: 90%;
+    /* Đảm bảo không bao giờ tràn màn hình */
     height: 100vh;
     background: var(--glass);
     backdrop-filter: blur(25px);
     border-left: 1px solid rgba(212, 175, 55, 0.15);
     z-index: 1600;
-    padding: 60px 30px;
+    padding: 60px 25px;
     transform: translate3d(100%, 0, 0);
     transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 0.6s;
     display: flex;
@@ -481,9 +487,30 @@ input:checked+.slider:before {
     pointer-events: none;
 }
 
+#message-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 8px;
+    color: #fff;
+    padding: 12px;
+    font-size: 16px;
+    /* Quan trọng: Ngăn iOS zoom khi focus */
+    font-family: var(--font-main);
+    resize: none;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+#message-input:focus {
+    border-color: var(--gold);
+}
+
 @media (max-width: 600px) {
     #settings-panel {
-        padding: 60px 20px 80px;
-        gap: 25px;
+        padding: 50px 15px 80px;
+        gap: 20px;
+        width: 85%;
+        /* Chiếm 85% màn hình cho thoáng trên mobile */
     }
 }
