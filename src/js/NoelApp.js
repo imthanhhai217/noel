@@ -39,7 +39,7 @@ export class NoelApp {
 
         this.init();
         const title = document.getElementById('app-title');
-        if (title) title.innerText = "MERRY CHRISTMAS";
+        if (title) title.innerText = "JU LÈ";
     }
 
     async init() {
