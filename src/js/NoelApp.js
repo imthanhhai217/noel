@@ -210,12 +210,10 @@ export class NoelApp {
         }
 
         const star = new THREE.Mesh(geos.star, this.mats.star);
-        // ⚠️ QUAN TRỌNG: KHÔNG SỬA rotation.x!
-        // ExtrudeGeometry tạo hình trên mặt phẳng XY (đối diện camera)
-        // rotation.x = 0 là ĐÚNG để ngôi sao đứng thẳng
-        // Nếu thấy ngôi sao nằm ngang, hãy sửa createStarGeometry(), KHÔNG sửa rotation!
-        star.rotation.x = 0;
-        star.position.y = CONFIG.tree.height / 2 + 1.6;
+        // ⚠️ NGUYÊN NHÂN: ExtrudeGeometry tạo ngôi sao NẰM NGANG (mặt phẳng XY)
+        // GIẢI PHÁP CUỐI CÙNG: Xoay 90° theo trục Z để đứng thẳng
+        star.rotation.z = Math.PI / 2; // Xoay 90° để đứng thẳng
+        star.position.y = CONFIG.tree.height / 2 + 1.8;
         this.mainGroup.add(star);
 
         const dustGeo = new THREE.TetrahedronGeometry(0.08, 0);
@@ -503,26 +501,33 @@ export class NoelApp {
             }
         }, { passive: true });
 
-        // Lời nhắn (Gửi lời chúc) - Sử dụng ID riêng để tránh xung đột
+        // Lời nhắn (Gửi lời chúc) - Sử dụng addEventListener để KHÔNG bị ghi đè
         const sendGreetingBtn = document.getElementById('send-greeting-btn');
         const messageInput = document.getElementById('message-input');
         const appTitle = document.getElementById('app-title');
 
         if (sendGreetingBtn && messageInput && appTitle) {
-            sendGreetingBtn.onclick = (e) => {
+            // Dùng addEventListener thay vì onclick đệ TRÁNH bị ghi đè
+            sendGreetingBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
+
                 const val = messageInput.value.trim();
+                console.log('Greeting button clicked, value:', val);
+
                 if (val) {
-                    appTitle.innerText = val.toUpperCase();
-                    appTitle.style.color = '#ffd966';
-                    appTitle.style.opacity = '1';
+                    // Cập nhật trực tiếp vào DOM
+                    appTitle.textContent = val.toUpperCase();
+                    appTitle.setAttribute('style', 'color: #ffd966 !important; opacity: 1 !important;');
                     messageInput.value = '';
                     this.showMessage("✨ Lời chúc đã được gửi đi!");
                     if (panel) panel.classList.remove('open');
                 } else {
                     this.showMessage("⚠️ Hãy nhập lời chúc trước nhé!");
                 }
-            };
+            }, { once: false }); // Cho phép gọi nhiều lần
+        } else {
+            console.error('Missing greeting elements:', { sendGreetingBtn, messageInput, appTitle });
         }
 
         const fileInput = document.getElementById('file-input');
