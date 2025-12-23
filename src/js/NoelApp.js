@@ -182,7 +182,8 @@ export class NoelApp {
         }
 
         const star = new THREE.Mesh(geos.star, this.mats.star);
-        star.position.y = CONFIG.tree.height / 2 + 1.2;
+        // Ngôi sao mặc định đứng thẳng trên mặt phẳng XY (đối diện camera) sau khi Extrude
+        star.position.y = CONFIG.tree.height / 2 + 1.8; // Đặt lên trên đỉnh (12 + 1.8 = 13.8)
         this.mainGroup.add(star);
 
         const dustGeo = new THREE.TetrahedronGeometry(0.08, 0);
@@ -197,9 +198,10 @@ export class NoelApp {
         const shape = new THREE.Shape();
         for (let i = 0; i < points * 2; i++) {
             const radius = i % 2 === 0 ? outerRadius : innerRadius;
-            const angle = (i / (points * 2)) * Math.PI * 2;
+            // Bắt đầu từ angle = -Math.PI / 2 để điểm đầu tiên (i=0) nằm ở đỉnh cao nhất (0, R)
+            const angle = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2;
             const x = Math.cos(angle) * radius;
-            const y = Math.sin(angle) * radius;
+            const y = -Math.sin(angle) * radius; // Dùng âm sin để y đi lên khi angle là -PI/2
             if (i === 0) shape.moveTo(x, y);
             else shape.lineTo(x, y);
         }
