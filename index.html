@@ -147,18 +147,159 @@
             display: none;
         }
 
-        /* Webcam feedback */
-        #webcam-wrapper {
+        /* Mobile Controls */
+        #show-ui-btn {
             position: absolute;
-            bottom: 40px;
-            right: 40px;
-            width: 120px;
-            height: 90px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            overflow: hidden;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            color: #d4af37;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
             opacity: 0;
-            /* Hidden by default but functional */
             pointer-events: none;
+            transition: opacity 0.5s;
+            backdrop-filter: blur(5px);
+        }
+
+        #show-ui-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .controls-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 32px;
+                letter-spacing: 3px;
+            }
+
+            .upload-btn {
+                padding: 8px 15px;
+                font-size: 9px;
+            }
+        }
+
+        /* Settings Panel - Glassmorphism */
+        #settings-panel {
+            position: fixed;
+            top: 0;
+            right: -350px;
+            width: 300px;
+            height: 100vh;
+            background: rgba(15, 15, 15, 0.85);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(212, 175, 55, 0.2);
+            z-index: 1000;
+            padding: 40px 25px;
+            transition: right 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        #settings-panel.open {
+            right: 0;
+        }
+
+        .settings-header {
+            color: #d4af37;
+            font-family: 'Cinzel', serif;
+            font-size: 20px;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            padding-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-settings {
+            cursor: pointer;
+            font-size: 24px;
+            color: rgba(212, 175, 55, 0.6);
+            transition: color 0.3s;
+        }
+
+        .close-settings:hover {
+            color: #d4af37;
+        }
+
+        .settings-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .settings-label {
+            color: rgba(212, 175, 55, 0.8);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .upload-area {
+            border: 1px dashed rgba(212, 175, 55, 0.3);
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: #d4af37;
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .upload-area span {
+            display: block;
+            color: #d4af37;
+            font-size: 10px;
+            margin-top: 10px;
+            letter-spacing: 1px;
+        }
+
+        /* Fixed Gear Button */
+        #settings-trigger {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            width: 45px;
+            height: 45px;
+            background: rgba(15, 15, 15, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: #d4af37;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 900;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        #settings-trigger:hover {
+            transform: rotate(45deg);
+            border-color: #d4af37;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
         }
     </style>
 
@@ -188,13 +329,38 @@
 
     <div id="ui-layer">
         <h1></h1>
+    </div>
 
-        <div class="upload-wrapper">
-            <label class="upload-btn">
-                Thêm ảnh
-                <input type="file" id="file-input" multiple accept="image/*">
+    <div id="settings-trigger">
+        <span style="font-size: 20px;">⚙️</span>
+    </div>
+
+    <div id="settings-panel">
+        <div class="settings-header">
+            <span>SETTINGS</span>
+            <div class="close-settings">&times;</div>
+        </div>
+
+        <div class="settings-section">
+            <div class="settings-label">Ký ức Giáng sinh</div>
+            <label class="upload-area">
+                <div style="font-size: 24px;">📸</div>
+                <span>TẢI ẢNH LÊN</span>
+                <input type="file" id="file-input" multiple accept="image/*" style="display:none;">
             </label>
-            <div class="hint-text">Nhấn phím 'H' để ẩn các nút điều khiển</div>
+            <div style="color: rgba(212,175,55,0.4); font-size: 9px; line-height: 1.6;">
+                * Ảnh sẽ được treo ngẫu nhiên lên cây thông. Xòe tay để xem tất cả kỷ niệm.
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="settings-label">Điều khiển cử chỉ</div>
+            <div style="color: #fff; font-size: 10px; opacity: 0.6; line-height: 1.8;">
+                🖐️ Xòe: Xem ảnh<br>
+                ✊ Nắm: Hiện cây thông<br>
+                👌 Nhón: Xem cận cảnh<br>
+                ↔️ Di chuyển: Xoay 3D
+            </div>
         </div>
     </div>
 
@@ -678,11 +844,29 @@
             });
             document.getElementById('file-input').addEventListener('change', handleImageUpload);
 
-            // Toggle UI logic - ONLY hide controls, keep title
+            const settingsPanel = document.getElementById('settings-panel');
+            const trigger = document.getElementById('settings-trigger');
+            const closeBtn = document.querySelector('.close-settings');
+
+            const toggleSettings = () => {
+                settingsPanel.classList.toggle('open');
+            };
+
+            trigger.addEventListener('click', toggleSettings);
+            closeBtn.addEventListener('click', toggleSettings);
+
+            // Đóng khi click ra ngoài
+            window.addEventListener('click', (e) => {
+                if (!settingsPanel.contains(e.target) && !trigger.contains(e.target) && settingsPanel.classList.contains('open')) {
+                    settingsPanel.classList.remove('open');
+                }
+            });
+
+            // Keyboard support
             window.addEventListener('keydown', (e) => {
                 if (e.key.toLowerCase() === 'h') {
-                    const controls = document.querySelector('.upload-wrapper');
-                    if (controls) controls.classList.toggle('ui-hidden');
+                    const uiLayer = document.getElementById('ui-layer');
+                    uiLayer.classList.toggle('ui-hidden');
                 }
             });
         }
