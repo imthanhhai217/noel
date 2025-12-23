@@ -177,24 +177,36 @@ export class NoelApp {
             const r = Math.random();
             let mesh, type;
 
-            // Phân bố đa dạng hơn với các loại mới
-            if (r < 0.25) {
+            // Giảm candy cane và pine leaf xuống 50% (7.5% mỗi loại)
+            if (r < 0.3) {
                 mesh = new THREE.Mesh(geos.box, this.mats.green);
                 type = 'LEAF';
             }
-            else if (r < 0.4) {
+            else if (r < 0.375) {
                 mesh = new THREE.Mesh(geos.pineLeaf, this.mats.pineLeaf);
+                // Random rotation cho lá thông
+                mesh.rotation.set(
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI
+                );
                 type = 'PINE_LEAF';
             }
             else if (r < 0.55) {
                 mesh = new THREE.Mesh(geos.box, this.mats.gold);
                 type = 'GIFT';
             }
-            else if (r < 0.7) {
+            else if (r < 0.625) {
                 mesh = this.createCandyCaneGroup(geos.candyCane);
+                // Random rotation cho kẹo gậy
+                mesh.rotation.set(
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI
+                );
                 type = 'CANDY_CANE';
             }
-            else if (r < 0.9) {
+            else if (r < 0.85) {
                 mesh = new THREE.Mesh(geos.sphere, this.mats.gold);
                 type = 'BALL';
             }
@@ -210,9 +222,10 @@ export class NoelApp {
         }
 
         const star = new THREE.Mesh(geos.star, this.mats.star);
-        // ⚠️ NGUYÊN NHÂN: ExtrudeGeometry tạo ngôi sao NẰM NGANG (mặt phẳng XY)
-        // GIẢI PHÁP CUỐI CÙNG: Xoay 90° theo trục Z để đứng thẳng
-        star.rotation.z = Math.PI / 2; // Xoay 90° để đứng thẳng
+        // FIX CUỐI CÙNG: Ngôi sao đứng THẲNG ĐỨNG không nghiêng
+        star.rotation.x = 0;
+        star.rotation.y = 0;
+        star.rotation.z = 0; // KHÔNG xoay, giữ nguyên thẳng đứng
         star.position.y = CONFIG.tree.height / 2 + 1.8;
         this.mainGroup.add(star);
 
