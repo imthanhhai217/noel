@@ -300,56 +300,56 @@ export class NoelApp {
 
             const wrist = lms[0], thumb = lms[4], index = lms[8];
             const pinch = Math.hypot(thumb.x - index.x, thumb.y - index.y);
+            const count = this.countFingers(lms);
             const openDist = [8, 12, 16, 20].reduce((a, i) => a + Math.hypot(lms[i].x - wrist.x, lms[i].y - wrist.y), 0) / 4;
 
-            if (pinch < 0.05) {
+            // LOGIC PHÂN TÁCH ĐỂ TRÁNH NHẦM LẪN (v1.2.1.11)
+            if (count === 5 || openDist > 0.45) {
+                // Xòe tay hoàn toàn -> SCATTER
+                if (this.state.mode !== 'SCATTER') {
+                    this.state.mode = 'SCATTER';
+                    this.state.focusTarget = null;
+                    this.showMessage("�️ Chế độ Ký ức (Scatter)");
+                }
+            } else if (count === 0 || openDist < 0.2) {
+                // Nắm tay -> TREE
+                if (this.state.mode !== 'TREE') {
+                    this.state.mode = 'TREE';
+                    this.state.focusTarget = null;
+                    this.showMessage("✊ Chế độ Cây thông (Tree)");
+                }
+            } else if (pinch < 0.06) {
+                // 👌 Nhón tay -> FOCUS
                 if (this.state.mode !== 'FOCUS') {
                     this.state.mode = 'FOCUS';
                     const photos = this.particles.filter(p => p.type === 'PHOTO');
                     if (photos.length) this.state.focusTarget = photos[Math.floor(Math.random() * photos.length)].mesh;
-                    this.showMessage("👌 Đã chọn ảnh để xem cận cảnh");
+                    this.showMessage("👌 Cận cảnh kỷ niệm");
                 }
-            } else if (openDist < 0.25) {
-                if (this.state.mode !== 'TREE') {
-                    this.state.mode = 'TREE';
-                    this.state.focusTarget = null;
-                }
-            } else if (openDist > 0.4) {
-                if (this.state.mode !== 'SCATTER') {
-                    this.state.mode = 'SCATTER';
-                    this.state.focusTarget = null;
-                }
-            }
-
-            // Điều khiển âm nhạc bằng số ngón tay
-            const count = this.countFingers(lms);
-            if (count !== this.lastFingerCount) {
-                this.lastFingerCount = count;
-
-                if (count > 0 && count <= this.state.music.playlist.length) {
-                    const nextIndex = count - 1;
-                    if (this.state.music.index !== nextIndex || !this.state.music.playing) {
-                        this.state.music.index = nextIndex;
-                        this.handleMusic(true);
-                        this.setupAudio(); // Tải và phát bài mới
-
-                        // Cập nhật UI
-                        const toggle = document.getElementById('toggle-music');
-                        if (toggle) toggle.checked = true;
-                        const select = document.getElementById('select-song');
-                        if (select) select.value = nextIndex;
-
-                        this.showMessage(`🎵 Chuyển sang bài ${count}: ${this.state.music.playlist[nextIndex].split('/').pop().split('.')[0]}`);
+            } else {
+                // Logic điều khiển nhạc (1, 2, 3 ngón)
+                if (count !== this.lastFingerCount) {
+                    this.lastFingerCount = count;
+                    if (count >= 1 && count <= 3) {
+                        const nextIndex = count - 1;
+                        if (this.state.music.index !== nextIndex || !this.state.music.playing) {
+                            this.state.music.index = nextIndex;
+                            this.handleMusic(true);
+                            this.setupAudio();
+                            const select = document.getElementById('select-song');
+                            if (select) select.value = nextIndex;
+                            const toggle = document.getElementById('toggle-music');
+                            if (toggle) toggle.checked = true;
+                            this.showMessage(`🎵 Bài ${count}: ${this.state.music.playlist[nextIndex].split('/').pop().split('.')[0]}`);
+                        }
+                    } else if (count === 4) {
+                        if (this.state.music.playing) {
+                            this.handleMusic(false);
+                            const toggle = document.getElementById('toggle-music');
+                            if (toggle) toggle.checked = false;
+                            this.showMessage("🔇 Tắt nhạc (Gesture)");
+                        }
                     }
-                } else if (count > this.state.music.playlist.length) {
-                    if (this.state.music.playing) {
-                        this.handleMusic(false);
-                        const toggle = document.getElementById('toggle-music');
-                        if (toggle) toggle.checked = false;
-                        this.showMessage("🔇 Số ngón tay vượt quá danh sách bài hát - Tắt nhạc");
-                    }
-                } else if (count > 0) {
-                    this.showMessage(`🖐️ Bạn đang giơ ${count} ngón tay`);
                 }
             }
         } else {
