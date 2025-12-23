@@ -61,9 +61,20 @@ export class NoelApp {
         this.bindEvents();
 
         try {
-            await this.initVision();
+            // Không gọi initVision ngay lập tức ở init() để tránh bị trình duyệt block trên iOS
+            // Chúng ta sẽ đợi user tương tác hoặc chỉ khởi chạy landmarker trước
+            const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+            this.handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                baseOptions: {
+                    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+                    delegate: "AUTO"
+                },
+                runningMode: "VIDEO",
+                numHands: 1
+            });
+            console.log("HandLandmarker loaded successfully");
         } catch (e) {
-            console.error("Camera System Error:", e);
+            console.error("HandLandmarker fail:", e);
             this.disableGestureUI();
         }
 
@@ -185,23 +196,31 @@ export class NoelApp {
     }
 
     async initVision() {
-        // Kiểm tra xem có thiết bị camera nào không trước khi xin quyền
+        if (this.video && this.video.srcObject) return;
+
+        this.showMessage("Đang yêu cầu quyền Camera... 📸");
+
+        // Kiểm tra thiết bị
         if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
             const devices = await navigator.mediaDevices.enumerateDevices();
             if (!devices.some(d => d.kind === 'videoinput')) {
-                throw new Error("No camera device detected");
+                this.showMessage("⚠️ Không tìm thấy Camera trên thiết bị này.");
+                throw new Error("No camera");
             }
         }
 
-        const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
-        this.handLandmarker = await HandLandmarker.createFromOptions(vision, {
-            baseOptions: {
-                modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-                delegate: "AUTO" // Để MediaPipe tự chọn nhằm ổn định trên iOS/Android
-            },
-            runningMode: "VIDEO",
-            numHands: 1
-        });
+        if (!this.handLandmarker) {
+            this.showMessage("Đang tải mô hình trí tuệ nhân tạo... 🧠");
+            const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+            this.handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                baseOptions: {
+                    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+                    delegate: "AUTO"
+                },
+                runningMode: "VIDEO",
+                numHands: 1
+            });
+        }
 
         const video = document.getElementById('webcam');
         const constraintsList = [
@@ -220,11 +239,19 @@ export class NoelApp {
 
         if (stream) {
             video.srcObject = stream;
-            // Đảm bảo video play trên iOS
             video.setAttribute("playsinline", true);
-            video.onloadedmetadata = () => {
-                video.play().catch(e => console.error("Video play failed:", e));
-            };
+            video.setAttribute("muted", true);
+            video.muted = true;
+
+            await new Promise((resolve) => {
+                video.onloadedmetadata = () => {
+                    video.play().then(resolve).catch(e => {
+                        console.error("Play failed:", e);
+                        resolve();
+                    });
+                };
+            });
+
             this.video = video;
 
             // Sync UI and State
@@ -236,7 +263,8 @@ export class NoelApp {
             this.predict();
             this.showMessage("✨ Camera đã sẵn sàng! Cử chỉ tay đã BẬT.");
         } else {
-            throw new Error("Không thể khởi tạo luồng Camera");
+            this.showMessage("⚠️ Không thể truy cập Camera. Vui lòng kiểm tra lại quyền.");
+            throw new Error("No stream");
         }
     }
 
