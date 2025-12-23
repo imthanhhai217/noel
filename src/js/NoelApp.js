@@ -431,17 +431,18 @@ export class NoelApp {
             this.state.hand.y = (lms[9].y - 0.5) * 2;
 
             const wrist = lms[0], thumb = lms[4], index = lms[8];
-            const pinch = Math.hypot(thumb.x - index.x, thumb.y - index.y);
             const openDist = [8, 12, 16, 20].reduce((a, i) => a + Math.hypot(lms[i].x - wrist.x, lms[i].y - wrist.y), 0) / 4;
 
+            // Tính riêng ngón trỏ
+            const indexDist = Math.hypot(lms[8].x - wrist.x, lms[8].y - wrist.y);
             // Tính độ mở của 3 ngón còn lại (giữa, nhẫn, út)
-            const otherFingersOpen = [12, 16, 20].reduce((a, i) => a + Math.hypot(lms[i].x - wrist.x, lms[i].y - wrist.y), 0) / 3;
+            const otherFingersDist = [12, 16, 20].reduce((a, i) => a + Math.hypot(lms[i].x - wrist.x, lms[i].y - wrist.y), 0) / 3;
 
-            // XÁC ĐỊNH HÀNH ĐỘNG DỰA TRÊN KHOẢNG CÁCH (v1.2.1.40 - OK Gesture)
+            // XÁC ĐỊNH HÀNH ĐỘNG DỰA TRÊN KHOẢNG CÁCH (v1.2.1.43 - One Finger)
             let gestureId = -1;
 
-            // OK Gesture: Ngón cái chạm trỏ (pinch nhỏ) + Các ngón khác xòe ra (otherFingersOpen lớn)
-            if (pinch < 0.06 && otherFingersOpen > 0.25) gestureId = 2; // Focus (OK 👌)
+            // One Finger (Focus ☝️): Ngón trỏ thẳng, các ngón khác nắm
+            if (indexDist > 0.35 && otherFingersDist < 0.25) gestureId = 2; // Focus
             else if (openDist > 0.4) gestureId = 1; // Scatter (Xòe cả bàn tay 🖐️)
             else if (openDist < 0.22) gestureId = 0; // Tree (Nắm tay ✊)
 
@@ -960,7 +961,7 @@ export class NoelApp {
             guide.innerHTML = `
                 🖐️ <b>Xòe tay:</b> Chế độ Ký ức<br>
                 ✊ <b>Nắm tay:</b> Chế độ Cây thông<br>
-                👌 <b>Dấu OK:</b> Xem chi tiết ảnh<br>
+                ☝️ <b>Giơ 1 ngón:</b> Xem chi tiết ảnh<br>
                 ↔️ <b>Di chuyển:</b> Xoay không gian
             `;
         } else {
