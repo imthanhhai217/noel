@@ -306,13 +306,16 @@ export class NoelApp {
             updateBtn.onclick = () => {
                 const input = document.getElementById('message-input');
                 const title = document.getElementById('app-title');
-                if (input && input.value.trim()) {
+                if (input && title && input.value.trim()) {
                     title.style.opacity = '0';
                     setTimeout(() => {
-                        title.innerText = input.value.toUpperCase();
-                        title.style.opacity = '1';
+                        title.innerText = input.value.trim().toUpperCase();
+                        title.style.opacity = '0.9'; // Trả về opacity mặc định trong CSS
+                        input.value = ''; // Xóa nội dung sau khi gửi
                     }, 800);
                     this.showMessage("✨ Lời chúc đã được gửi đi!");
+                    const panel = document.getElementById('settings-panel');
+                    if (panel) panel.classList.remove('open'); // Đóng menu để xem lời chúc
                 }
             };
         }
@@ -355,8 +358,12 @@ export class NoelApp {
             }
         };
 
-        this.renderer.domElement.addEventListener('mousedown', (e) => this._clickStartTime = Date.now());
+        this.renderer.domElement.addEventListener('mousedown', (e) => {
+            if (this.state.config.gestures) return; // Khóa tương tác vật lý nếu bật cử chỉ
+            this._clickStartTime = Date.now();
+        });
         this.renderer.domElement.addEventListener('mouseup', (e) => {
+            if (this.state.config.gestures) return;
             const now = Date.now();
             if (now - this._clickStartTime < 200) {
                 // Double click detection
@@ -370,8 +377,12 @@ export class NoelApp {
             }
         });
 
-        this.renderer.domElement.addEventListener('touchstart', (e) => this._clickStartTime = Date.now());
+        this.renderer.domElement.addEventListener('touchstart', (e) => {
+            if (this.state.config.gestures) return;
+            this._clickStartTime = Date.now();
+        });
         this.renderer.domElement.addEventListener('touchend', (e) => {
+            if (this.state.config.gestures) return;
             const now = Date.now();
             if (now - this._clickStartTime < 200) {
                 // Double tap detection
@@ -440,10 +451,16 @@ export class NoelApp {
         this.state.rotation.x += (targetRX - this.state.rotation.x) * 2.5 * dt;
 
         // Apply rotation logic based on the switch
-        if (this.state.config.gestures && this.state.hand.detected) {
-            this.mainGroup.rotation.y = this.state.rotation.y;
-            this.mainGroup.rotation.x = this.state.rotation.x;
-            this.controls.enabled = false;
+        if (this.state.config.gestures) {
+            this.controls.enabled = false; // Luôn tắt OrbitControls nếu bật Gestures
+            if (this.state.hand.detected) {
+                this.mainGroup.rotation.y = this.state.rotation.y;
+                this.mainGroup.rotation.x = this.state.rotation.x;
+            } else {
+                // Trả về mặc định nếu không có tay (không xoay lung tung)
+                this.mainGroup.rotation.y *= 0.95;
+                this.mainGroup.rotation.x *= 0.95;
+            }
         } else {
             this.controls.enabled = true;
             this.controls.update();
