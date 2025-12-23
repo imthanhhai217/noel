@@ -39,7 +39,7 @@
     <div id="toast-container"></div>
 
     <div id="ui-layer">
-        <h1 id="app-title"></h1>
+        <h1 id="app-title">JU LÈ</h1>
     </div>
 
     <!-- Toggle & Panel -->
@@ -53,6 +53,7 @@
             <div class="close-settings" title="Đóng">&times;</div>
         </div>
 
+        <!-- 1. Ký ức -->
         <div class="settings-section">
             <div class="section-label">Ký ức của bạn</div>
             <label class="upload-zone">
@@ -63,6 +64,7 @@
             <div id="image-list" class="image-preview-list"></div>
         </div>
 
+        <!-- 2. Tùy chỉnh -->
         <div class="settings-section">
             <div class="section-label">Tùy chỉnh trải nghiệm</div>
 
@@ -105,26 +107,28 @@
                     </label>
                 </div>
             </div>
+        </div>
 
-            <div class="settings-section">
-                <div class="section-label">Lời nhắn của bạn</div>
-                <textarea id="message-input" placeholder="Viết lời chúc tại đây..." rows="3"
-                    style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(212,175,55,0.2); border-radius: 8px; color: #fff; padding: 10px; font-size: 12px; resize: none; outline: none;"></textarea>
-                <button id="update-message" class="theme-btn" style="width: 100%; margin-top: 5px;">GỬI LỜI
-                    CHÚC</button>
-            </div>
+        <!-- 3. Lời nhắn -->
+        <div class="settings-section">
+            <div class="section-label">Lời nhắn của bạn</div>
+            <textarea id="message-input" placeholder="Viết lời chúc tại đây..." rows="3"
+                style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(212,175,55,0.2); border-radius: 8px; color: #fff; padding: 10px; font-size: 12px; resize: none; outline: none;"></textarea>
+            <button id="update-message" class="theme-btn" style="width: 100%; margin-top: 5px;">GỬI LỜI CHÚC</button>
+        </div>
 
-            <div class="settings-section">
-                <div class="section-label" style="margin-bottom: 5px;">Chủ đề màu sắc</div>
-                <div class="theme-picker">
-                    <button class="theme-btn active" data-theme="classic">Truyền thống</button>
-                    <button class="theme-btn" data-theme="frozen">Băng giá</button>
-                    <button class="theme-btn" data-theme="pinky">Ngọt ngào</button>
-                    <button class="theme-btn" data-theme="starry">Vũ trụ</button>
-                </div>
+        <!-- 4. Chủ đề -->
+        <div class="settings-section">
+            <div class="section-label" style="margin-bottom: 5px;">Chủ đề màu sắc</div>
+            <div class="theme-picker">
+                <button class="theme-btn active" data-theme="classic">Truyền thống</button>
+                <button class="theme-btn" data-theme="frozen">Băng giá</button>
+                <button class="theme-btn" data-theme="pinky">Ngọt ngào</button>
+                <button class="theme-btn" data-theme="starry">Vũ trụ</button>
             </div>
         </div>
 
+        <!-- 5. Hướng dẫn -->
         <div class="settings-section">
             <div class="section-label">Hướng dẫn điều khiển</div>
             <div id="gesture-guide-content" class="gesture-guide">
@@ -134,7 +138,8 @@
                 ↔️ <b>Di chuyển:</b> Xoay không gian 3D
             </div>
         </div>
-        <div id="app-version-menu">v1.2.0.7</div>
+
+        <div id="app-version-menu">v1.2.0.8</div>
     </aside>
 
     <!-- Hidden Webcam elements -->

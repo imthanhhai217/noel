@@ -335,16 +335,24 @@ export class NoelApp {
             updateBtn.onclick = () => {
                 const input = document.getElementById('message-input');
                 const title = document.getElementById('app-title');
-                if (input && title && input.value.trim()) {
+                const val = input ? input.value.trim() : "";
+
+                if (val && title) {
+                    // Hiệu ứng mờ dần và đổi chữ
+                    title.style.transition = 'opacity 0.4s ease';
                     title.style.opacity = '0';
+
                     setTimeout(() => {
-                        title.innerText = input.value.trim().toUpperCase();
-                        title.style.opacity = '0.9'; // Trả về opacity mặc định trong CSS
-                        input.value = ''; // Xóa nội dung sau khi gửi
-                    }, 800);
+                        title.innerText = val.toUpperCase();
+                        title.style.opacity = '0.9';
+                        if (input) input.value = '';
+                    }, 450);
+
                     this.showMessage("✨ Lời chúc đã được gửi đi!");
                     const panel = document.getElementById('settings-panel');
-                    if (panel) panel.classList.remove('open'); // Đóng menu để xem lời chúc
+                    if (panel) panel.classList.remove('open');
+                } else {
+                    this.showMessage("⚠️ Vui lòng nhập lời chúc nhé!");
                 }
             };
         }
@@ -468,7 +476,8 @@ export class NoelApp {
         particle.dataUrl = dataUrl;
         this.particles.push(particle);
 
-        this.renderImageList();
+        // Gọi render sau một khoảng nghỉ cực ngắn để đảm bảo array đã được push
+        setTimeout(() => this.renderImageList(), 10);
     }
 
     renderImageList() {
