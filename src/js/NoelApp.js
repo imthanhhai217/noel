@@ -182,8 +182,9 @@ export class NoelApp {
         }
 
         const star = new THREE.Mesh(geos.star, this.mats.star);
-        // Ngôi sao mặc định đứng thẳng trên mặt phẳng XY (đối diện camera) sau khi Extrude
-        star.position.y = CONFIG.tree.height / 2 + 1.8; // Đặt lên trên đỉnh (12 + 1.8 = 13.8)
+        // Ép ngôi sao đứng thẳng đối diện camera (v1.2.1.21)
+        star.rotation.x = -Math.PI / 2;
+        star.position.y = CONFIG.tree.height / 2 + 1.8;
         this.mainGroup.add(star);
 
         const dustGeo = new THREE.TetrahedronGeometry(0.08, 0);
@@ -427,7 +428,8 @@ export class NoelApp {
                 const val = messageInput.value.trim();
                 if (val) {
                     appTitle.innerText = val.toUpperCase();
-                    appTitle.style.opacity = '0.9';
+                    appTitle.style.color = '#ffd966'; // Ép màu vàng kim (var --gold)
+                    appTitle.style.opacity = '1';
                     messageInput.value = '';
                     this.showMessage("✨ Lời chúc đã được gửi đi!");
                     if (panel) panel.classList.remove('open');

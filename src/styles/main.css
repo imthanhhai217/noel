@@ -97,20 +97,17 @@ body {
 h1 {
     font-family: var(--font-heading);
     font-size: clamp(1.8rem, 8vw, 4rem);
-    /* Fluid typography */
-    margin: 0;
-    letter-spacing: 0.15em;
-    background: linear-gradient(to bottom, #fff, var(--gold));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 10px 40px rgba(212, 175, 55, 0.4);
-    opacity: 0.9;
-    pointer-events: auto;
+    color: var(--gold);
     text-align: center;
+    margin-bottom: 5px;
+    text-shadow: 0 0 20px rgba(255, 217, 102, 0.4), 0 10px 30px rgba(0, 0, 0, 0.5);
+    line-height: 1.1;
+    z-index: 2;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.9;
+    text-transform: uppercase;
     max-width: 90%;
-    line-height: 1.2;
-    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
 }
 
 #secret-message {
