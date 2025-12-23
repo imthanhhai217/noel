@@ -546,9 +546,11 @@ export class NoelApp {
         let targetRY = (this.state.mode === 'TREE' && this.state.config.autoRotate) ? time * 0.2 : 0;
         let targetRX = 0;
 
-        if (this.state.hand.detected && this.state.mode === 'SCATTER') {
-            targetRY = this.state.hand.x * Math.PI * 0.6;
-            targetRX = this.state.hand.y * Math.PI * 0.25;
+        if (this.state.hand.detected) {
+            // Khi có tay, target xoay sẽ theo vị trí tay (đã được mirror để tự nhiên)
+            const mirrorX = -this.state.hand.x;
+            targetRY = mirrorX * Math.PI * 0.8;
+            targetRX = this.state.hand.y * Math.PI * 0.3;
         }
 
         this.state.rotation.y += (targetRY - this.state.rotation.y) * 2.5 * dt;
