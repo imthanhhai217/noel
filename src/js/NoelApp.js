@@ -1,8 +1,4 @@
-import * as THREE from 'three';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 import { CONFIG, Particle } from './Particle.js';
 
@@ -20,6 +16,8 @@ export class NoelApp {
         this.particles = [];
         this.photoGroup = new THREE.Group();
         this.lastVideoTime = -1;
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
 
         this.init();
         const title = document.getElementById('app-title');
@@ -41,6 +39,12 @@ export class NoelApp {
 
         this.hideLoader();
         this.animate();
+
+        // Tip ban đầu
+        setTimeout(() => {
+            this.showMessage("Chào mừng bạn đến với Không gian Giáng sinh 🎄");
+            setTimeout(() => this.showMessage("Sử dụng chuột hoặc cảm ứng để xoay 3D"), 2000);
+        }, 1500);
     }
 
     setupThree() {
@@ -64,6 +68,15 @@ export class NoelApp {
 
         const pmrem = new THREE.PMREMGenerator(this.renderer);
         this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+        // OrbitControls for Fallback & Hybrid
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+        this.controls.minDistance = 20;
+        this.controls.maxDistance = 150;
+        this.controls.autoRotate = false;
+        this.controls.enablePan = false;
     }
 
     setupLights() {
@@ -169,6 +182,7 @@ export class NoelApp {
             video.onloadedmetadata = () => video.play();
             this.video = video;
             this.predict();
+            this.showMessage("Đã kết nối Camera. Hãy thử cử chỉ tay! ✨");
         }
     }
 
@@ -229,10 +243,48 @@ export class NoelApp {
         window.addEventListener('keydown', (e) => {
             if (e.key.toLowerCase() === 'h') document.getElementById('ui-layer').classList.toggle('ui-hidden');
         });
+
+        // Click/Tap Interaction
+        const onSelect = (event) => {
+            // Calculate mouse position
+            const x = event.touches ? event.touches[0].clientX : event.clientX;
+            const y = event.touches ? event.touches[0].clientY : event.clientY;
+
+            this.mouse.x = (x / window.innerWidth) * 2 - 1;
+            this.mouse.y = -(y / window.innerHeight) * 2 + 1;
+
+            this.raycaster.setFromCamera(this.mouse, this.camera);
+            const intersects = this.raycaster.intersectObjects(this.photoGroup.children, true);
+
+            if (intersects.length > 0) {
+                // Find the top-level group (the frame+photo)
+                let obj = intersects[0].object;
+                while (obj.parent && obj.parent !== this.photoGroup) obj = obj.parent;
+
+                this.state.mode = 'FOCUS';
+                this.state.focusTarget = obj;
+            } else {
+                // If clicking background, toggle between TREE and SCATTER
+                this.state.mode = (this.state.mode === 'TREE') ? 'SCATTER' : 'TREE';
+                this.state.focusTarget = null;
+            }
+        };
+
+        this.renderer.domElement.addEventListener('mousedown', (e) => this._clickStartTime = Date.now());
+        this.renderer.domElement.addEventListener('mouseup', (e) => {
+            if (Date.now() - this._clickStartTime < 200) onSelect(e);
+        });
+        this.renderer.domElement.addEventListener('touchstart', (e) => this._clickStartTime = Date.now());
+        this.renderer.domElement.addEventListener('touchend', (e) => {
+            if (Date.now() - this._clickStartTime < 200) onSelect(e);
+        });
     }
 
     handleUpload(e) {
         const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            this.showMessage(`Đang treo ${files.length} kỷ niệm lên cây... 📸`);
+        }
         const loader = new THREE.TextureLoader();
         files.forEach(file => {
             const reader = new FileReader();
@@ -281,11 +333,36 @@ export class NoelApp {
         this.state.rotation.y += (targetRY - this.state.rotation.y) * 2.5 * dt;
         this.state.rotation.x += (targetRX - this.state.rotation.x) * 2.5 * dt;
 
-        this.mainGroup.rotation.y = this.state.rotation.y;
-        this.mainGroup.rotation.x = this.state.rotation.x;
+        // Apply rotation only if hand detected to avoid conflict with OrbitControls
+        if (this.state.hand.detected) {
+            this.mainGroup.rotation.y = this.state.rotation.y;
+            this.mainGroup.rotation.x = this.state.rotation.x;
+            this.controls.enabled = false; // Disable orbit if hands are active
+        } else {
+            this.mainGroup.rotation.y = THREE.MathUtils.lerp(this.mainGroup.rotation.y, 0, dt);
+            this.mainGroup.rotation.x = THREE.MathUtils.lerp(this.mainGroup.rotation.x, 0, dt);
+            this.controls.enabled = true;
+            this.controls.update();
+        }
 
         this.particles.forEach(p => p.update(dt, this.state, this.mainGroup, this.camera));
 
         this.composer.render();
+    }
+
+    showMessage(text) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerText = text;
+
+        container.appendChild(toast);
+
+        // Tự xóa sau khi animation kết thúc (4s)
+        setTimeout(() => {
+            toast.remove();
+        }, 4000);
     }
 }
