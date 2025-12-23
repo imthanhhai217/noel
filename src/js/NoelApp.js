@@ -438,13 +438,18 @@ export class NoelApp {
             // Tính độ mở của 3 ngón còn lại (giữa, nhẫn, út)
             const otherFingersDist = [12, 16, 20].reduce((a, i) => a + Math.hypot(lms[i].x - wrist.x, lms[i].y - wrist.y), 0) / 3;
 
-            // XÁC ĐỊNH HÀNH ĐỘNG DỰA TRÊN KHOẢNG CÁCH (v1.2.1.43 - One Finger)
+            // XÁC ĐỊNH HÀNH ĐỘNG DỰA TRÊN KHOẢNG CÁCH (v1.2.1.44 - One Finger Improved)
             let gestureId = -1;
 
-            // One Finger (Focus ☝️): Ngón trỏ thẳng, các ngón khác nắm
-            if (indexDist > 0.35 && otherFingersDist < 0.25) gestureId = 2; // Focus
-            else if (openDist > 0.4) gestureId = 1; // Scatter (Xòe cả bàn tay 🖐️)
-            else if (openDist < 0.22) gestureId = 0; // Tree (Nắm tay ✊)
+            // One Finger (Focus ☝️):
+            // 1. Ngón trỏ tương đối thẳng (> 0.25)
+            // 2. Các ngón khác tương đối nắm (< 0.3 - cho phép nắm hờ)
+            // 3. Ngón trỏ phải dài hơn hẳn đám còn lại (gấp 1.3 lần) để tránh nhầm với xòe tay
+            if (indexDist > 0.25 && otherFingersDist < 0.35 && indexDist > otherFingersDist * 1.3) {
+                gestureId = 2; // Focus
+            }
+            else if (openDist > 0.45) gestureId = 1; // Scatter (🖐️ Tăng ngưỡng xòe để tránh nhầm với 1 ngón)
+            else if (openDist < 0.25) gestureId = 0; // Tree (✊ Tăng ngưỡng nắm để dễ nhận hơn)
 
             if (gestureId !== -1 && gestureId === this.gestureStability.lastRaw) {
                 this.gestureStability.count++;
