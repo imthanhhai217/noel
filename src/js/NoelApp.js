@@ -50,7 +50,7 @@ export class NoelApp {
 
         this.init();
         const title = document.getElementById('app-title');
-        if (title) title.innerText = "JU LÈ";
+        if (title) title.innerText = "Merry Christmas";
     }
 
     async init() {
@@ -197,7 +197,7 @@ export class NoelApp {
         this.handLandmarker = await HandLandmarker.createFromOptions(vision, {
             baseOptions: {
                 modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-                delegate: "GPU"
+                delegate: "AUTO" // Để MediaPipe tự chọn nhằm ổn định trên iOS/Android
             },
             runningMode: "VIDEO",
             numHands: 1
@@ -220,7 +220,11 @@ export class NoelApp {
 
         if (stream) {
             video.srcObject = stream;
-            video.onloadedmetadata = () => video.play();
+            // Đảm bảo video play trên iOS
+            video.setAttribute("playsinline", true);
+            video.onloadedmetadata = () => {
+                video.play().catch(e => console.error("Video play failed:", e));
+            };
             this.video = video;
 
             // Sync UI and State
@@ -246,10 +250,15 @@ export class NoelApp {
 
     predict() {
         if (!this.state.config.gestures) return;
-        if (this.video && this.video.currentTime !== this.lastVideoTime) {
+
+        if (this.handLandmarker && this.video && this.video.readyState >= 2 && this.video.currentTime !== this.lastVideoTime) {
             this.lastVideoTime = this.video.currentTime;
-            const result = this.handLandmarker.detectForVideo(this.video, performance.now());
-            this.processGestures(result);
+            try {
+                const result = this.handLandmarker.detectForVideo(this.video, performance.now());
+                this.processGestures(result);
+            } catch (e) {
+                console.error("Detection Error:", e);
+            }
         }
         requestAnimationFrame(() => this.predict());
     }
