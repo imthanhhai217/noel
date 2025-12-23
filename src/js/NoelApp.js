@@ -694,12 +694,22 @@ export class NoelApp {
         const group = new THREE.Group();
         group.userData.id = id;
 
+        // Tính toán tỷ lệ ảnh gốc để giữ nguyên aspect ratio
+        const aspectRatio = texture.image.width / texture.image.height;
+        const maxHeight = 1.2;
+        const photoWidth = maxHeight * aspectRatio;
+        const photoHeight = maxHeight;
+
+        // Frame điều chỉnh theo kích thước ảnh
+        const framePadding = 0.1;
         const frame = new THREE.Mesh(
-            new THREE.BoxGeometry(1.4, 1.4, 0.05),
+            new THREE.BoxGeometry(photoWidth + framePadding * 2, photoHeight + framePadding * 2, 0.05),
             new THREE.MeshStandardMaterial({ color: this.themes[this.state.mode === 'SCATTER' ? 'starry' : 'classic'].gold, metalness: 1 })
         );
+
+        // Ảnh giữ nguyên tỷ lệ gốc
         const photo = new THREE.Mesh(
-            new THREE.PlaneGeometry(1.2, 1.2),
+            new THREE.PlaneGeometry(photoWidth, photoHeight),
             new THREE.MeshBasicMaterial({ map: texture })
         );
         photo.position.z = 0.04;
