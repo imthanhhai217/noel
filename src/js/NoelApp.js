@@ -184,11 +184,11 @@ export class NoelApp {
             }
             else if (r < 0.375) {
                 mesh = new THREE.Mesh(geos.pineLeaf, this.mats.pineLeaf);
-                // Random rotation cho lá thông
+                // Lá thông nghiêng nhẹ theo trục X (15°) và random Y, Z
                 mesh.rotation.set(
-                    Math.random() * Math.PI,
-                    Math.random() * Math.PI,
-                    Math.random() * Math.PI
+                    Math.PI / 12, // 15° nghiêng nhẹ
+                    Math.random() * Math.PI * 2,
+                    Math.random() * Math.PI * 2
                 );
                 type = 'PINE_LEAF';
             }
@@ -222,11 +222,11 @@ export class NoelApp {
         }
 
         const star = new THREE.Mesh(geos.star, this.mats.star);
-        // Xoay 36° (1/10 vòng = 360°/10) để đỉnh cây chỉ vào GIỮA 2 cánh sao
-        // Ngôi sao 5 cánh có 10 góc (5 nhọn + 5 lõm), mỗi góc cách nhau 36°
+        // Xoay để CÁNH LÕM (khoảng trống) hướng XUỐNG, đỉnh cây chỉ vào đó
+        // 36° + 180° = 216° (hoặc -144°)
         star.rotation.x = 0;
         star.rotation.y = 0;
-        star.rotation.z = Math.PI / 5; // Xoay 36° để căn chỉnh
+        star.rotation.z = Math.PI / 5 + Math.PI; // 36° + 180° = 216°
         star.position.y = CONFIG.tree.height / 2 + 1.8;
         this.mainGroup.add(star);
 
