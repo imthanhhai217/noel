@@ -307,24 +307,23 @@ export class NoelApp {
 
             const wrist = lms[0], thumb = lms[4], index = lms[8];
             const pinch = Math.hypot(thumb.x - index.x, thumb.y - index.y);
-            const rawCount = this.countFingers(lms);
             const openDist = [8, 12, 16, 20].reduce((a, i) => a + Math.hypot(lms[i].x - wrist.x, lms[i].y - wrist.y), 0) / 4;
 
-            // XÁC ĐỊNH GESTURE THÔ (v1.2.1.12)
-            let currentRaw = rawCount;
-            if (pinch < 0.06) currentRaw = 99; // 99 là mã cho Pinch (👌)
+            // XÁC ĐỊNH HÀNH ĐỘNG DỰA TRÊN KHOẢNG CÁCH (v1.2.1.14)
+            let gestureId = -1;
+            if (pinch < 0.06) gestureId = 2; // Focus
+            else if (openDist > 0.4) gestureId = 1; // Scatter
+            else if (openDist < 0.22) gestureId = 0; // Tree
 
-            // KIỂM TRA ĐỘ ỔN ĐỊNH (Stability Check)
-            if (currentRaw === this.gestureStability.lastRaw) {
+            if (gestureId !== -1 && gestureId === this.gestureStability.lastRaw) {
                 this.gestureStability.count++;
             } else {
-                this.gestureStability.lastRaw = currentRaw;
+                this.gestureStability.lastRaw = gestureId;
                 this.gestureStability.count = 0;
             }
 
-            // CHỈ THỰC HIỆN KHI GIỮ YÊN TRONG 15 FRAMES (~0.5s)
-            if (this.gestureStability.count === 15) {
-                this.executeGesture(currentRaw, openDist);
+            if (this.gestureStability.count === 12) { // Ổn định khoảng 0.4s
+                this.executeGesture(gestureId);
             }
         } else {
             this.state.hand.detected = false;
@@ -333,67 +332,24 @@ export class NoelApp {
         }
     }
 
-    executeGesture(gesture, openDist) {
-        if (gesture === 99) { // 👌 PINCH
+    executeGesture(id) {
+        if (id === 1) { // SCATTER
+            if (this.state.mode !== 'SCATTER') {
+                this.state.mode = 'SCATTER';
+                this.state.focusTarget = null;
+            }
+        } else if (id === 0) { // TREE
+            if (this.state.mode !== 'TREE') {
+                this.state.mode = 'TREE';
+                this.state.focusTarget = null;
+            }
+        } else if (id === 2) { // FOCUS
             if (this.state.mode !== 'FOCUS') {
                 this.state.mode = 'FOCUS';
                 const photos = this.particles.filter(p => p.type === 'PHOTO');
                 if (photos.length) this.state.focusTarget = photos[Math.floor(Math.random() * photos.length)].mesh;
-                this.showMessage("👌 Cận cảnh kỷ niệm");
-            }
-            return;
-        }
-
-        if (gesture === 5 || openDist > 0.45) { // 🖐️ OPEN PALM
-            if (this.state.mode !== 'SCATTER') {
-                this.state.mode = 'SCATTER';
-                this.state.focusTarget = null;
-                this.showMessage("🖐️ Chế độ Ký ức");
-            }
-        } else if (gesture === 0 || openDist < 0.2) { // ✊ FIST
-            if (this.state.mode !== 'TREE') {
-                this.state.mode = 'TREE';
-                this.state.focusTarget = null;
-                this.showMessage("✊ Chế độ Cây thông");
-            }
-        } else if (gesture >= 1 && gesture <= 3) {
-            // ĐIỀU KHIỂN NHẠC (1, 2, 3)
-            const nextIndex = gesture - 1;
-            if (this.state.music.index !== nextIndex || !this.state.music.playing) {
-                this.state.music.index = nextIndex;
-                this.handleMusic(true);
-                this.setupAudio();
-                const select = document.getElementById('select-song');
-                if (select) select.value = nextIndex;
-                this.showMessage(`🎵 Bài hát ${gesture}`);
-            }
-        } else if (gesture === 4) {
-            // TẮT NHẠC (4)
-            if (this.state.music.playing) {
-                this.handleMusic(false);
-                const toggle = document.getElementById('toggle-music');
-                if (toggle) toggle.checked = false;
-                this.showMessage("🔇 Đã dừng nhạc");
             }
         }
-    }
-
-    countFingers(lms) {
-        let count = 0;
-        // Các ngón: Trỏ (8), Giữa (12), Áp út (16), Út (20)
-        // Kiểm tra xem khớp đầu ngón có cao hơn khớp MCP (gốc ngón) không
-        const tips = [8, 12, 16, 20];
-        const bases = [6, 10, 14, 18];
-
-        tips.forEach((tip, idx) => {
-            if (lms[tip].y < lms[bases[idx]].y) count++;
-        });
-
-        // Riêng ngón cái (4) kiểm tra theo chiều ngang so với gốc ngón (2)
-        // (Tùy thuộc vào tay trái hay phải nhưng đơn giản hóa là so sánh khoảng cách x)
-        if (Math.abs(lms[4].x - lms[2].x) > 0.1) count++;
-
-        return count;
     }
 
     bindEvents() {
@@ -805,11 +761,10 @@ export class NoelApp {
 
         if (this.state.config.gestures) {
             guide.innerHTML = `
-                🖐️ <b>Xòe tay (Giữ yên):</b> Chế độ Ký ức<br>
-                ✊ <b>Nắm tay (Giữ yên):</b> Chế độ Cây thông<br>
-                👌 <b>Nhón tay:</b> Xem cận cảnh ảnh<br>
-                ☝️ <b>1, 2, 3 ngón:</b> Chọn bài nhạc<br>
-                🖖 <b>4 ngón:</b> Tắt âm nhạc
+                🖐️ <b>Xòe tay:</b> Chế độ Ký ức<br>
+                ✊ <b>Nắm tay:</b> Chế độ Cây thông<br>
+                👌 <b>Nhón tay:</b> Xem chi tiết ảnh<br>
+                ↔️ <b>Di chuyển:</b> Xoay không gian
             `;
         } else {
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
