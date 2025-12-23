@@ -445,13 +445,7 @@ export class NoelApp {
             this.mainGroup.rotation.x = this.state.rotation.x;
             this.controls.enabled = false;
         } else {
-            // If gestures are OFF or no hand detected, use OrbitControls
-            if (this.state.config.gestures) {
-                // If gestures are ON but no hand, just keep it smooth
-                this.mainGroup.rotation.y = THREE.MathUtils.lerp(this.mainGroup.rotation.y, 0, dt);
-                this.mainGroup.rotation.x = THREE.MathUtils.lerp(this.mainGroup.rotation.x, 0, dt);
-            }
-            this.controls.enabled = !this.state.hand.detected; // Hand still takes precedence if detected
+            this.controls.enabled = true;
             this.controls.update();
         }
 
