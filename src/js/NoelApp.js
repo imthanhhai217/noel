@@ -222,10 +222,11 @@ export class NoelApp {
         }
 
         const star = new THREE.Mesh(geos.star, this.mats.star);
-        // FIX CUỐI CÙNG: Ngôi sao đứng THẲNG ĐỨNG không nghiêng
+        // Xoay 36° (1/10 vòng = 360°/10) để đỉnh cây chỉ vào GIỮA 2 cánh sao
+        // Ngôi sao 5 cánh có 10 góc (5 nhọn + 5 lõm), mỗi góc cách nhau 36°
         star.rotation.x = 0;
         star.rotation.y = 0;
-        star.rotation.z = 0; // KHÔNG xoay, giữ nguyên thẳng đứng
+        star.rotation.z = Math.PI / 5; // Xoay 36° để căn chỉnh
         star.position.y = CONFIG.tree.height / 2 + 1.8;
         this.mainGroup.add(star);
 
