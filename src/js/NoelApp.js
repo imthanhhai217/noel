@@ -264,6 +264,7 @@ export class NoelApp {
         };
         document.getElementById('toggle-gestures').onchange = (e) => {
             this.state.config.gestures = e.target.checked;
+            this.updateGuideContent();
             if (e.target.checked) this.predict();
             else this.state.hand.detected = false;
         };
@@ -416,5 +417,36 @@ export class NoelApp {
         this.mats.dust.color.setHex(theme.dust);
 
         this.showMessage(`Đã chuyển sang chủ đề ${themeName.toUpperCase()} ✨`);
+    }
+
+    updateGuideContent() {
+        const guide = document.getElementById('gesture-guide-content');
+        if (!guide) return;
+
+        if (this.state.config.gestures) {
+            guide.innerHTML = `
+                🖐️ <b>Xòe tay:</b> Xem tất cả ảnh<br>
+                ✊ <b>Nắm tay:</b> Thu gọn cây thông<br>
+                👌 <b>Nhón tay:</b> Xem cận cảnh 1 ảnh<br>
+                ↔️ <b>Di chuyển:</b> Xoay không gian 3D
+            `;
+        } else {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                guide.innerHTML = `
+                    👆 <b>Chạm vào ảnh:</b> Xem cận cảnh<br>
+                    🌚 <b>Chạm vùng trống:</b> Tỏa hạt/Cây thông<br>
+                    👆 <b>Vuốt 1 ngón:</b> Xoay không gian<br>
+                    ✌️ <b>Dùng 2 ngón:</b> Phóng to/Thu nhỏ
+                `;
+            } else {
+                guide.innerHTML = `
+                    🖱️ <b>Click vào ảnh:</b> Xem cận cảnh<br>
+                    🌌 <b>Click vùng trống:</b> Tỏa hạt/Cây thông<br>
+                    🖱️ <b>Giữ chuột trái:</b> Xoay không gian<br>
+                    🎡 <b>Cuộn chuột:</b> Phóng to/Thu nhỏ
+                `;
+            }
+        }
     }
 }
