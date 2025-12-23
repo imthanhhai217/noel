@@ -125,7 +125,8 @@ h1 {
 /* Settings Toggle */
 #settings-trigger {
     position: fixed;
-    top: 25px;
+    bottom: 25px;
+    /* Di chuyển xuống góc dưới */
     right: 25px;
     width: 48px;
     height: 48px;
