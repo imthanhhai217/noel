@@ -16,7 +16,7 @@ export const CONFIG = {
     },
     camera: {
         fov: 42,
-        z: 50
+        z: 60 // Zoom out một chút (từ 50 lên 60)
     }
 };
 
