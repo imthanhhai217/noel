@@ -63,7 +63,7 @@ export class NoelApp {
         try {
             await this.initVision();
         } catch (e) {
-            console.warn("Vision System failed to start:", e);
+            console.error("Camera System Error:", e);
             this.disableGestureUI();
         }
 
@@ -72,9 +72,12 @@ export class NoelApp {
 
         // Tip ban đầu
         setTimeout(() => {
-            this.showMessage("Chào mừng bạn đến với Không gian Giáng sinh 🎄");
-            setTimeout(() => this.showMessage("Sử dụng chuột hoặc cảm ứng để xoay 3D"), 2000);
-        }, 1500);
+            if (!this.state.config.gestures) {
+                this.showMessage("Chào mừng bạn! Hãy sử dụng chuột để xoay 3D 🎄");
+            } else {
+                this.showMessage("Chào mừng bạn! Hãy thử dùng cử chỉ tay nhé 🖐️");
+            }
+        }, 2000);
     }
 
     setupThree() {
@@ -227,9 +230,9 @@ export class NoelApp {
             this.updateGuideContent();
 
             this.predict();
-            this.showMessage("Đã kết nối Camera. Hãy thử cử chỉ tay! ✨");
+            this.showMessage("✨ Camera đã sẵn sàng! Cử chỉ tay đã BẬT.");
         } else {
-            throw new Error("No camera stream available or permission denied");
+            throw new Error("Không thể khởi tạo luồng Camera");
         }
     }
 
