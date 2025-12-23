@@ -452,12 +452,12 @@ export class NoelApp {
                 this.gestureStability.count = 0;
             }
 
-            if (this.gestureStability.count === 12) { // Ổn định khoảng 0.4s
+            if (this.gestureStability.count === 5) { // Giảm delay: chỉ cần 5 frame ổn định (khoảng 0.15s)
                 this.executeGesture(gestureId);
             }
         } else {
             this.state.hand.detected = false;
-            this.gestureStability.lastRaw = -1;
+            // KHÔNG reset lastRaw để tránh flick, chỉ reset count
             this.gestureStability.count = 0;
         }
     }
@@ -788,37 +788,52 @@ export class NoelApp {
         let targetRY = (this.state.mode === 'TREE' && this.state.config.autoRotate) ? time * 0.2 : 0;
         let targetRX = 0;
 
-        if (this.state.hand.detected) {
-            // Khi có tay, target xoay sẽ theo vị trí tay (đã được mirror để tự nhiên)
-            const mirrorX = -this.state.hand.x;
-            targetRY = mirrorX * Math.PI * 0.8;
-            targetRX = this.state.hand.y * Math.PI * 0.3;
-        }
-
-        this.state.rotation.y += (targetRY - this.state.rotation.y) * 2.5 * dt;
-        this.state.rotation.x += (targetRX - this.state.rotation.x) * 2.5 * dt;
-
-        // Apply rotation logic based on the switch
+        // Logic xoay mượt mà (Incremental Rotation)
         if (this.state.mode === 'FOCUS') {
             this.controls.enabled = false;
         } else if (this.state.config.gestures) {
             this.controls.enabled = true;
-            this.controls.enableRotate = false; // Tắt xoay bằng chuột/tay để dùng gesture
-            this.controls.enableZoom = true;   // Cho phép zoom
+            this.controls.enableRotate = false;
+            this.controls.enableZoom = true;
             this.controls.update();
 
             if (this.state.hand.detected) {
-                this.mainGroup.rotation.y = this.state.rotation.y;
-                this.mainGroup.rotation.x = this.state.rotation.x;
+                // Tính toán sự thay đổi vị trí tay (Delta)
+                // Nếu chưa có vị trí cũ, gán bằng vị trí hiện tại
+                if (this.state.hand.lastX === undefined) {
+                    this.state.hand.lastX = this.state.hand.x;
+                    this.state.hand.lastY = this.state.hand.y;
+                }
+
+                const deltaX = this.state.hand.x - this.state.hand.lastX;
+                const deltaY = this.state.hand.y - this.state.hand.lastY;
+
+                // Cập nhật vị trí cũ
+                this.state.hand.lastX = this.state.hand.x;
+                this.state.hand.lastY = this.state.hand.y;
+
+                // Cộng dồn góc xoay (đảo dấu deltaX để swipe trái xoay trái)
+                // Hệ số 3.0 để tăng độ nhạy
+                this.mainGroup.rotation.y -= deltaX * 3.0;
+                this.mainGroup.rotation.x += deltaY * 2.0;
+
+                // Giới hạn góc xoay trục X để không bị lộn ngược
+                this.mainGroup.rotation.x = Math.max(-0.5, Math.min(0.5, this.mainGroup.rotation.x));
             } else {
+                // Khi mất tay: Reset vị trí cũ để lần sau bắt đầu lại mượt mà
+                this.state.hand.lastX = undefined;
+                this.state.hand.lastY = undefined;
+
+                // Tự động xoay nhẹ nếu ở chế độ TREE
                 if (this.state.config.autoRotate && this.state.mode === 'TREE') {
                     this.mainGroup.rotation.y += 0.5 * dt;
-                } else {
-                    this.mainGroup.rotation.y *= 0.95;
-                    this.mainGroup.rotation.x *= 0.95;
                 }
+
+                // Từ từ trả trục X về 0 (đứng thẳng)
+                this.mainGroup.rotation.x *= 0.95;
             }
         } else {
+            // Chế độ chuột/cảm ứng thường
             this.controls.enabled = true;
             this.controls.enableRotate = true;
             this.controls.enableZoom = true;
@@ -826,8 +841,10 @@ export class NoelApp {
             this.controls.autoRotateSpeed = 1.0;
             this.controls.update();
 
-            this.mainGroup.rotation.y *= 0.95;
-            this.mainGroup.rotation.x *= 0.95;
+            // Reset trục X về 0 khi dùng chuột
+            if (!this.controls.enableRotate) {
+                this.mainGroup.rotation.x *= 0.95;
+            }
         }
 
         this.particles.forEach(p => p.update(dt, this.state, this.mainGroup, this.camera));
