@@ -91,10 +91,26 @@
 
             <div class="settings-row">
                 <span style="font-size: 11px;">Âm nhạc giáng sinh</span>
-                <label class="switch">
-                    <input type="checkbox" id="toggle-music">
-                    <span class="slider"></span>
-                </label>
+                <div style="display: flex; gap: 5px; align-items: center;">
+                    <select id="select-song"
+                        style="background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); color: var(--gold); font-size: 10px; border-radius: 4px; padding: 2px;">
+                        <option value="0">Jingle Bells</option>
+                        <option value="1">We Wish You</option>
+                        <option value="2">Silent Night</option>
+                    </select>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-music">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-label">Lời nhắn của bạn</div>
+                <textarea id="message-input" placeholder="Viết lời chúc tại đây..." rows="3"
+                    style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(212,175,55,0.2); border-radius: 8px; color: #fff; padding: 10px; font-size: 12px; resize: none; outline: none;"></textarea>
+                <button id="update-message" class="theme-btn" style="width: 100%; margin-top: 5px;">GỬI LỜI
+                    CHÚC</button>
             </div>
 
             <div class="settings-section">

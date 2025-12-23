@@ -288,30 +288,34 @@ export class NoelApp {
             this.state.config.snow = e.target.checked;
         };
 
-        document.getElementById('toggle-music').onchange = (e) => {
-            this.handleMusic(e.target.checked);
-        };
+        const toggleMusic = document.getElementById('toggle-music');
+        if (toggleMusic) {
+            toggleMusic.onchange = (e) => this.handleMusic(e.target.checked);
+        }
 
-        document.getElementById('select-song').onchange = (e) => {
-            this.state.music.index = parseInt(e.target.value);
-            if (this.state.music.playing) {
-                this.setupAudio(); // Reload with new song
-            }
-        };
+        const selectSong = document.getElementById('select-song');
+        if (selectSong) {
+            selectSong.onchange = (e) => {
+                this.state.music.index = parseInt(e.target.value);
+                if (this.state.music.playing) this.setupAudio();
+            };
+        }
 
-        // Message Update
-        document.getElementById('update-message').onclick = () => {
-            const input = document.getElementById('message-input');
-            const title = document.getElementById('app-title');
-            if (input.value.trim()) {
-                title.style.opacity = '0';
-                setTimeout(() => {
-                    title.innerText = input.value.toUpperCase();
-                    title.style.opacity = '1';
-                }, 800);
-                this.showMessage("✨ Lời chúc đã được gửi đi!");
-            }
-        };
+        const updateBtn = document.getElementById('update-message');
+        if (updateBtn) {
+            updateBtn.onclick = () => {
+                const input = document.getElementById('message-input');
+                const title = document.getElementById('app-title');
+                if (input && input.value.trim()) {
+                    title.style.opacity = '0';
+                    setTimeout(() => {
+                        title.innerText = input.value.toUpperCase();
+                        title.style.opacity = '1';
+                    }, 800);
+                    this.showMessage("✨ Lời chúc đã được gửi đi!");
+                }
+            };
+        }
 
         const themeBtns = document.querySelectorAll('.theme-btn');
         themeBtns.forEach(btn => {
