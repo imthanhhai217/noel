@@ -182,9 +182,8 @@ export class NoelApp {
         }
 
         const star = new THREE.Mesh(geos.star, this.mats.star);
-        // Ép ngôi sao đứng thẳng đối diện camera (v1.2.1.21)
-        star.rotation.x = -Math.PI / 2;
-        star.position.y = CONFIG.tree.height / 2 + 1.8;
+        // Ngôi sao mặc định đứng thẳng đối diện camera (v1.2.1.24)
+        star.position.y = CONFIG.tree.height / 2 + 1.5;
         this.mainGroup.add(star);
 
         const dustGeo = new THREE.TetrahedronGeometry(0.08, 0);
