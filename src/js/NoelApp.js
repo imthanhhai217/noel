@@ -288,16 +288,42 @@ export class NoelApp {
             this.composer.setSize(window.innerWidth, window.innerHeight);
         });
 
+        // UI Controls
         const panel = document.getElementById('settings-panel');
         const trigger = document.getElementById('settings-trigger');
 
-        trigger.onclick = () => panel.classList.toggle('open');
-        document.querySelector('.close-settings').onclick = () => panel.classList.remove('open');
+        if (trigger) trigger.onclick = () => panel.classList.toggle('open');
+        const closeBtn = document.querySelector('.close-settings');
+        if (closeBtn) closeBtn.onclick = () => panel.classList.remove('open');
 
-        document.getElementById('file-input').onchange = (e) => this.handleUpload(e);
+        // Lời nhắn (Gửi lời chúc)
+        const updateBtn = document.getElementById('update-message');
+        const messageInput = document.getElementById('message-input');
+        const appTitle = document.getElementById('app-title');
+
+        if (updateBtn && messageInput && appTitle) {
+            updateBtn.onclick = () => {
+                const val = messageInput.value.trim();
+                if (val) {
+                    appTitle.innerText = val.toUpperCase();
+                    appTitle.style.opacity = '0.9';
+                    messageInput.value = '';
+                    this.showMessage("✨ Lời chúc đã được gửi đi!");
+                    if (panel) panel.classList.remove('open');
+                } else {
+                    this.showMessage("⚠️ Hãy nhập lời chúc trước nhé!");
+                }
+            };
+        }
+
+        const fileInput = document.getElementById('file-input');
+        if (fileInput) fileInput.onchange = (e) => this.handleUpload(e);
 
         window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 'h') document.getElementById('ui-layer').classList.toggle('ui-hidden');
+            if (e.key.toLowerCase() === 'h') {
+                const ui = document.getElementById('ui-layer');
+                if (ui) ui.classList.toggle('ui-hidden');
+            }
         });
 
         // Config Toggles
@@ -338,26 +364,7 @@ export class NoelApp {
             };
         }
 
-        const updateBtn = document.getElementById('update-message');
-        if (updateBtn) {
-            updateBtn.onclick = () => {
-                const input = document.getElementById('message-input');
-                const title = document.getElementById('app-title');
-                const val = input ? input.value.trim() : "";
-
-                if (val && title) {
-                    title.innerText = val.toUpperCase();
-                    title.style.opacity = '0.9';
-                    if (input) input.value = '';
-
-                    this.showMessage("✨ Lời chúc đã được gửi đi!");
-                    const panel = document.getElementById('settings-panel');
-                    if (panel) panel.classList.remove('open');
-                } else {
-                    this.showMessage("⚠️ Vui lòng nhập lời chúc nhé!");
-                }
-            };
-        }
+        // ... (đã di chuyển lên trên)
 
         const themeBtns = document.querySelectorAll('.theme-btn');
         themeBtns.forEach(btn => {

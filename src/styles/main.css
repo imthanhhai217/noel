@@ -469,14 +469,13 @@ input:checked+.slider:before {
 }
 
 #app-version-menu {
-    text-align: right;
+    position: absolute;
+    bottom: 15px;
+    right: 25px;
     font-size: 9px;
     color: rgba(255, 255, 255, 0.15);
-    /* Màu trắng mờ rất nhẹ */
     font-family: var(--font-main);
     letter-spacing: 2px;
-    margin-top: auto;
-    /* Đẩy xuống cuối menu flex */
-    padding-top: 20px;
     font-weight: 300;
+    pointer-events: none;
 }
