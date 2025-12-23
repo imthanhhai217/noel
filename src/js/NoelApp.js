@@ -210,8 +210,11 @@ export class NoelApp {
         }
 
         const star = new THREE.Mesh(geos.star, this.mats.star);
-        // Ép ngôi sao đứng thẳng rực rỡ (v1.2.1.26)
-        star.rotation.x = -Math.PI / 2;
+        // ⚠️ QUAN TRỌNG: KHÔNG SỬA rotation.x!
+        // ExtrudeGeometry tạo hình trên mặt phẳng XY (đối diện camera)
+        // rotation.x = 0 là ĐÚNG để ngôi sao đứng thẳng
+        // Nếu thấy ngôi sao nằm ngang, hãy sửa createStarGeometry(), KHÔNG sửa rotation!
+        star.rotation.x = 0;
         star.position.y = CONFIG.tree.height / 2 + 1.6;
         this.mainGroup.add(star);
 
@@ -224,6 +227,9 @@ export class NoelApp {
     }
 
     createStarGeometry(innerRadius, outerRadius, points) {
+        // ⚠️ HÀM NÀY TẠO NGÔI SAO ĐỨNG THẲNG TRÊN MẶT PHẲNG XY
+        // Ngôi sao sẽ đối diện camera, đỉnh hướng lên trên
+        // KHÔNG cần xoay thêm sau khi tạo!
         const shape = new THREE.Shape();
         for (let i = 0; i < points * 2; i++) {
             const radius = i % 2 === 0 ? outerRadius : innerRadius;
