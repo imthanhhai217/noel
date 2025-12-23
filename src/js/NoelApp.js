@@ -548,13 +548,15 @@ export class NoelApp {
         this.state.rotation.x += (targetRX - this.state.rotation.x) * 2.5 * dt;
 
         // Apply rotation logic based on the switch
-        if (this.state.config.gestures) {
-            this.controls.enabled = false; // Luôn tắt OrbitControls nếu bật Gestures
+        if (this.state.mode === 'FOCUS') {
+            this.controls.enabled = false;
+            // KHÔNG xoay mainGroup khi đang focus để ảnh không bị bay lệch
+        } else if (this.state.config.gestures) {
+            this.controls.enabled = false;
             if (this.state.hand.detected) {
                 this.mainGroup.rotation.y = this.state.rotation.y;
                 this.mainGroup.rotation.x = this.state.rotation.x;
             } else {
-                // Trả về mặc định nếu không có tay (không xoay lung tung)
                 this.mainGroup.rotation.y *= 0.95;
                 this.mainGroup.rotation.x *= 0.95;
             }

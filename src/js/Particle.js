@@ -65,7 +65,14 @@ export class Particle {
         // Handle Focus Mode for Photos
         if (state.mode === 'FOCUS') {
             if (this.mesh === state.focusTarget) {
-                const worldPos = new THREE.Vector3(0, 2, 35);
+                // Lấy vector hướng từ camera tới tâm cảnh (0,0,0)
+                const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+
+                // Đặt mục tiêu là vị trí camera cộng thêm một khoảng hướng theo tầm nhìn
+                const focusDist = 20; // Khoảng cách lý tưởng để xem ảnh
+                const worldPos = new THREE.Vector3().copy(camera.position).add(dir.multiplyScalar(focusDist));
+
+                // Chuyển worldPos về localPos của mainGroup (vì mainGroup có thể đang xoay)
                 const invMatrix = new THREE.Matrix4().copy(mainGroup.matrixWorld).invert();
                 targetPos = worldPos.applyMatrix4(invMatrix);
             } else {
