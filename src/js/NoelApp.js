@@ -22,9 +22,9 @@ export class NoelApp {
                 index: 0,
                 frequency: 0,
                 playlist: [
-                    'https://cdn.pixabay.com/audio/2021/11/24/audio_83cc283995.mp3', // Jingle Bells
-                    'https://cdn.pixabay.com/audio/2021/12/10/audio_5f2d0a0b12.mp3', // We Wish You
-                    'https://cdn.pixabay.com/audio/2023/11/02/audio_be0c00ce58.mp3'  // Silent Night
+                    'https://upload.wikimedia.org/wikipedia/commons/4/4d/Jingle_Bells_%28ISRC_USUAN1100187%29.mp3',
+                    'https://upload.wikimedia.org/wikipedia/commons/a/a6/We_Wish_you_a_Merry_Christmas_%28ISRC_USUAN1100369%29.mp3',
+                    'https://upload.wikimedia.org/wikipedia/commons/0/0f/Silent_Night_%28ISRC_USUAN1100075%29.mp3'
                 ]
             },
             config: {
