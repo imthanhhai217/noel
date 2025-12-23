@@ -245,8 +245,8 @@ h1 {
 }
 
 .upload-icon {
-    width: 60px;
-    height: 60px;
+    width: 40px;
+    height: 40px;
     object-fit: contain;
     display: block;
     margin: 0 auto 15px;

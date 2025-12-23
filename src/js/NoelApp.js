@@ -682,14 +682,16 @@ export class NoelApp {
         // Apply rotation logic based on the switch
         if (this.state.mode === 'FOCUS') {
             this.controls.enabled = false;
-            // KHÔNG xoay khi đang focus
         } else if (this.state.config.gestures) {
-            this.controls.enabled = false;
+            this.controls.enabled = true;
+            this.controls.enableRotate = false; // Tắt xoay bằng chuột/tay để dùng gesture
+            this.controls.enableZoom = true;   // Cho phép zoom
+            this.controls.update();
+
             if (this.state.hand.detected) {
                 this.mainGroup.rotation.y = this.state.rotation.y;
                 this.mainGroup.rotation.x = this.state.rotation.x;
             } else {
-                // Tự động xoay nhẹ ở chế độ cử chỉ khi không có tay
                 if (this.state.config.autoRotate && this.state.mode === 'TREE') {
                     this.mainGroup.rotation.y += 0.5 * dt;
                 } else {
@@ -699,11 +701,12 @@ export class NoelApp {
             }
         } else {
             this.controls.enabled = true;
+            this.controls.enableRotate = true;
+            this.controls.enableZoom = true;
             this.controls.autoRotate = this.state.config.autoRotate && this.state.mode === 'TREE';
             this.controls.autoRotateSpeed = 1.0;
             this.controls.update();
 
-            // Đảm bảo mainGroup trả về 0 nếu đang ở chế độ chuột để tránh cộng dồn xoay
             this.mainGroup.rotation.y *= 0.95;
             this.mainGroup.rotation.x *= 0.95;
         }
