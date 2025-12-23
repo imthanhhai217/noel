@@ -438,18 +438,29 @@ export class NoelApp {
             // Tính độ mở của 3 ngón còn lại (giữa, nhẫn, út)
             const otherFingersDist = [12, 16, 20].reduce((a, i) => a + Math.hypot(lms[i].x - wrist.x, lms[i].y - wrist.y), 0) / 3;
 
-            // XÁC ĐỊNH HÀNH ĐỘNG DỰA TRÊN KHOẢNG CÁCH (v1.2.1.44 - One Finger Improved)
+            // XÁC ĐỊNH HÀNH ĐỘNG DỰA TRÊN KHOẢNG CÁCH (v1.2.1.46 - Refined Priority)
             let gestureId = -1;
 
-            // One Finger (Focus ☝️):
-            // 1. Ngón trỏ tương đối thẳng (> 0.25)
-            // 2. Các ngón khác tương đối nắm (< 0.3 - cho phép nắm hờ)
-            // 3. Ngón trỏ phải dài hơn hẳn đám còn lại (gấp 1.3 lần) để tránh nhầm với xòe tay
-            if (indexDist > 0.25 && otherFingersDist < 0.35 && indexDist > otherFingersDist * 1.3) {
-                gestureId = 2; // Focus
+            // Priority 1: Nắm tay (Tree ✊) - Check trước tiên
+            // Nếu trung bình cả 4 ngón đều gần cổ tay -> Chắc chắn là nắm
+            if (openDist < 0.25) {
+                gestureId = 0; // Tree
             }
-            else if (openDist > 0.45) gestureId = 1; // Scatter (🖐️ Tăng ngưỡng xòe để tránh nhầm với 1 ngón)
-            else if (openDist < 0.25) gestureId = 0; // Tree (✊ Tăng ngưỡng nắm để dễ nhận hơn)
+            // Priority 2: Xòe tay (Scatter 🖐️)
+            else if (openDist > 0.45) {
+                gestureId = 1; // Scatter
+            }
+            // Priority 3: Giơ 1 ngón (Focus ☝️)
+            // Chỉ check khi không phải nắm hẳn cũng không phải xòe hẳn
+            else {
+                // Điều kiện khắt khe hơn:
+                // 1. Ngón trỏ phải duỗi thẳng (> 0.3)
+                // 2. Các ngón khác phải nắm (< 0.3)
+                // 3. Tỷ lệ vượt trội phải cao (> 1.5 lần)
+                if (indexDist > 0.3 && otherFingersDist < 0.3 && indexDist > otherFingersDist * 1.5) {
+                    gestureId = 2; // Focus
+                }
+            }
 
             // Lưu gesture hiện tại để chặn xoay nếu đang Focus
             this.state.hand.currentGesture = gestureId;
