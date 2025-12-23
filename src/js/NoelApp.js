@@ -814,8 +814,11 @@ export class NoelApp {
 
                 // Cộng dồn góc xoay (đảo dấu deltaX để swipe trái xoay trái)
                 // Hệ số 3.0 để tăng độ nhạy
-                this.mainGroup.rotation.y -= deltaX * 3.0;
-                this.mainGroup.rotation.x += deltaY * 2.0;
+                // Chỉ xoay nếu delta nhỏ (tránh giật khi mất tracking)
+                if (Math.abs(deltaX) < 0.1 && Math.abs(deltaY) < 0.1) {
+                    this.mainGroup.rotation.y -= deltaX * 3.0;
+                    this.mainGroup.rotation.x += deltaY * 2.0;
+                }
 
                 // Giới hạn góc xoay trục X để không bị lộn ngược
                 this.mainGroup.rotation.x = Math.max(-0.5, Math.min(0.5, this.mainGroup.rotation.x));
@@ -826,11 +829,15 @@ export class NoelApp {
 
                 // Tự động xoay nhẹ nếu ở chế độ TREE
                 if (this.state.config.autoRotate && this.state.mode === 'TREE') {
-                    this.mainGroup.rotation.y += 0.5 * dt;
+                    this.mainGroup.rotation.y += 0.2 * dt;
                 }
 
                 // Từ từ trả trục X về 0 (đứng thẳng)
-                this.mainGroup.rotation.x *= 0.95;
+                if (Math.abs(this.mainGroup.rotation.x) > 0.01) {
+                    this.mainGroup.rotation.x *= 0.95;
+                } else {
+                    this.mainGroup.rotation.x = 0;
+                }
             }
         } else {
             // Chế độ chuột/cảm ứng thường
